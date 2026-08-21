@@ -15,8 +15,13 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 const brogetta = localFont({
-  src: "../assets/fonts/BROGETTA-Regular.otf",
+  src: "../src/assets/fonts/BROGETTA-Regular.otf",
   variable: "--font-brogetta",
+});
+
+const quera = localFont({
+  src: "../src/assets/fonts/Quera DEMO.otf",
+  variable: "--font-quera",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +37,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakartaSans.variable} ${spaceGrotesk.variable} ${brogetta.variable} h-full antialiased`}
+			className={`
+				${jakartaSans.variable}
+				${quera.variable}
+      	${spaceGrotesk.variable}
+       	${brogetta.variable}
+        h-full antialiased bg-primary`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
