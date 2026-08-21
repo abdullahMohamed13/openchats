@@ -1,4 +1,4 @@
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "./auth-client";
 import { SignInProps } from '@/types/auth'
 
 export const handleSignIn = async ({email, password, callbackURL}: SignInProps) => {

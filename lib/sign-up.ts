@@ -1,4 +1,4 @@
-import { authClient } from '@/lib/auth-client';
+import { authClient } from './auth-client';
 import { ErrorContext } from 'better-auth/react'; // RequestContext, SuccessContext
 import { SignUpProps } from '@/types/auth';
 
