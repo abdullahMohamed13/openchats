@@ -8,6 +8,10 @@
   --font-heading: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
 	/*BrandText*/
   --font-brogetta: var(--font-brogetta), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-quera: var(--font-quera), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -34,12 +38,13 @@
 }
 
 :root {
-	--accent: #6366f1;
-  --accent-foreground: #ffffff;
+	--primary: #12623A;
 
   --background: #0b0f19;
-  --foreground: #f9fafb;
+  --foreground: #fdefc9;
 
+  --secondary: #5D8B63;
+  --accent: #789C75;
   --surface: #111827;
   --surface-foreground: #f9fafb;
 
@@ -61,38 +66,42 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  margin: 0 20px;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+@utility flex-center {
+	@apply flex items-center justify-center;
 }
 
+@utility flex-col-center {
+	@apply flex flex-col items-center justify-center;
+}
+
+/*Headings*/
+/*h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-brogetta), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}*/
 h1 {
   font-size: 2.5rem;
   line-height: 1.1;
 }
-
 h2 {
   font-size: 2rem;
   line-height: 1.2;
 }
-
 h3 {
   font-size: 1.5rem;
   line-height: 1.3;
 }
-
 h4 {
   font-size: 1.25rem;
   line-height: 1.4;
 }
-
 h5 {
   font-size: 1.125rem;
   line-height: 1.4;
 }
-
 h6 {
   font-size: 1rem;
   line-height: 1.5;
