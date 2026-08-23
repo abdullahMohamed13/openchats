@@ -11,7 +11,7 @@ export default function HeroSection() {
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ duration: 1, ease: "easeInOut" }}
-			className="min-h-screen flex-col-center"
+			className="min-h-screen flex-col-center section-padding text-center"
 			style={{
 				background: "linear-gradient(rgba(18, 98, 58, 0.85), rgba(18, 98, 58, 0.90)), url('/hero-background.webp')",
 				backgroundSize: "cover",
@@ -22,7 +22,7 @@ export default function HeroSection() {
 			<div className="font-brogetta flex-col-center mb-4">
 				<h1 className=" font-bold text-6xl! md:text-7xl lg:text-8xl!">OpenChats</h1>
 		
-				<h2 className="italic capitalize">Your team | Your conversations | One place.</h2>
+				<h3 className="md:italic capitalize mt-2">Your team | Your conversations | One place.</h3>
 			</div>
 			<p>Bring your teams, workspaces, channels, and direct conversations together in one place.</p>
 	
