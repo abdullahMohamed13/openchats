@@ -7,10 +7,11 @@ import { useState } from "react"
 
 interface BookCallButtonProps {
   className?: string
-  onClick?: () => void
+	onClick?: () => void
+  children: React.ReactNode
 }
 
-export function BookCallButton({ className, onClick }: BookCallButtonProps) {
+export function BookCallButton({ className, onClick, children }: BookCallButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -53,7 +54,7 @@ export function BookCallButton({ className, onClick }: BookCallButtonProps) {
         </span>
 
         {/* Text with subtle shift */}
-        <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">Book A Call</span>
+				<span className="transition-transform duration-300 ease-out group-hover:translate-x-1">{children}</span>
       </div>
 
       {/* Subtle shine effect on hover */}
