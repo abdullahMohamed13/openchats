@@ -1,5 +1,5 @@
 import Image from "next/image";
-import LineImage from '@/assets/icons/line.png'
+import LineImage from '@/assets/images/line.png'
 
 export function Line({ className, width = 128, height = 39 }: { className?: string, width?: number, height?: number }) {
 	return <Image
