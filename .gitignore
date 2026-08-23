@@ -20,6 +20,9 @@
 # production
 /build
 
+# development (i put what i learn in here ッ)
+docs
+
 # misc
 .DS_Store
 *.pem
