@@ -1,21 +1,15 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Plus_Jakarta_Sans, Space_Grotesk, Geist, Press_Start_2P } from "next/font/google";
+import { Geist, Plus_Jakarta_Sans, Press_Start_2P } from "next/font/google";
 
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import LayoutShell from "@/components/shared/LayoutShell";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-body",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
 });
 
 const brogetta = localFont({
@@ -47,10 +41,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-			className={cn("h-full", "antialiased", "bg-primary", jakartaSans.variable, quera.variable, spaceGrotesk.variable, brogetta.variable, pressStart.variable, "font-sans", geist.variable)}
+			className={cn("h-full", "antialiased", "bg-primary", "font-body",
+				jakartaSans.variable, quera.variable, brogetta.variable, geist.variable, pressStart.variable)}
     >
-			<body>
-				<LayoutShell>{children}</LayoutShell>
+      <body>
+				{children}
       </body>
     </html>
   );
