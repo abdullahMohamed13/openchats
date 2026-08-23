@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 export default function CTABannerSection() {
   const router = useRouter()
   return (
-    <div className="flex min-h-[320px] w-full items-center justify-center bg-background p-8">
+    <div className="flex min-h-[320px] w-full items-center justify-center bg-background section-padding">
       <CTABanner
         className="w-full max-w-2xl"
         variant="highlight"

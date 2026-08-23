@@ -1,4 +1,5 @@
 import { Line } from "../shared/Line"
+import { MotionWrapper } from "../shared/MotionWrapper"
 import StepsCard from "./reusable/StepsCard"
 
 export interface StepsProps {
@@ -26,18 +27,23 @@ const steps: StepsProps[] = [
 ]
 
 export default function HowItWorks() {
-	return <div className="section-padding">
-		<div className="mb-4 font-bold flex flex-col items-center md:items-start">
-			<p className="text-2xl font-quera">How It Works</p>
-			<Line className="-mt-5 rotate-179" />
-
-			<p className="-mt-2 text-4xl capitalize text-center md:text-left">Getting started is simple.</p>
-		</div>
+	return <MotionWrapper
+			initial={{ opacity: 0 }}
+			animate={{opacity: 1}}
+		>
+			<section className="section-padding">
+				<div className="mb-4 font-bold flex flex-col items-center md:items-start">
+					<p className="text-2xl font-quera">How It Works</p>
+					<Line className="-mt-5 rotate-179" />
 		
-		<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-around">
-			{steps.map((step: StepsProps) => (
-				<StepsCard key={step.id} id={step.id} label={step.label} description={step.description} />
-			))}
-		</div>
-	</div>
+					<p className="-mt-2 text-4xl capitalize text-center md:text-left">Getting started is simple.</p>
+				</div>
+				
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-around">
+					{steps.map((step: StepsProps) => (
+						<StepsCard key={step.id} id={step.id} label={step.label} description={step.description} />
+					))}
+				</div>
+			</section>
+		</MotionWrapper>
 }
