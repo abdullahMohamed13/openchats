@@ -18,7 +18,7 @@ export default function HeroSection() {
 				backgroundPosition: "center",
 			}}
 		>
-			<Image src="/logo.png" width={150} height={150} alt="Logo" loading="eager" />
+			<Image src="/logo.webp" width={150} height={150} alt="Logo" loading="eager" />
 			<div className="font-brogetta flex-col-center mb-4">
 				<h1 className=" font-bold text-6xl! md:text-7xl lg:text-8xl!">OpenChats</h1>
 		
