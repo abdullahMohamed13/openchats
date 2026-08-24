@@ -12,17 +12,17 @@ const steps: StepsProps[] = [
 	{
 		id: 1,
 		label: 'Create Your Workspace',
-		description: "Sign up and set up your team's workspace in seconds."
+		description: "Set up a dedicated home for your team, club, or community in seconds."
 	},
 	{
 		id: 2,
-		label: 'Invite Your Team',
-		description: "Share a link and start bringing your teammates on board."
+		label: 'Invite Your People',
+		description: "Share an invite link and bring everyone on board, no setup required."
 	},
 	{
 		id: 3,
 		label: 'Start Conversations',
-		description: "Create channels, send messages, and collaborate in real time."
+		description: "Organize discussions into channels, message directly, and share files in real time."
 	},
 ]
 
