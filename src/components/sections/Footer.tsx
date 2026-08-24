@@ -3,10 +3,10 @@ import Image from "next/image";
 
 export default function Footer() {
 	return <footer className="bg-[#131114] flex justify-between flex-col md:flex-row section-padding py-6!">
-		<div className="text-primary font-press-start flex items-center gap-2">
-			<Image src="/logo-alt.png" width={50} height={50} alt="Logo" loading="lazy" />
+		<Link href="/" className="text-primary font-press-start flex items-center gap-2">
+			<Image src="/logo-alt.webp" width={60} height={60} alt="Logo" loading="lazy" />
 			openchats
-		</div>
+		</Link>
 		
 		<div className="mt-4 text-xs flex flex-col md:flex-row items-center md:items-start gap-4">
 			<p>© 2026 OpenChats All rights reserved</p>

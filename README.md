@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/logo.png" alt="OpenChats logo" width="120" />
+<img src="public/logo.webp" alt="OpenChats logo" width="120" />
 
 # OpenChats
 

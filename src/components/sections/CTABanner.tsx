@@ -6,7 +6,18 @@ import { useRouter } from "next/navigation"
 export default function CTABannerSection() {
   const router = useRouter()
   return (
-    <div className="flex min-h-[320px] w-full items-center justify-center bg-background section-padding">
+		<div
+			className="section-padding flex min-h-[320px] w-full items-center justify-center bg-background"
+			style={
+				{
+					"--cta-overlay": "color-mix(in srgb, var(--background) 94%, transparent)",
+					backgroundImage:
+						"linear-gradient(var(--cta-overlay), var(--cta-overlay)), url('/hero-background.webp')",
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+				} as React.CSSProperties
+			}
+		>
       <CTABanner
         className="w-full max-w-2xl"
         variant="highlight"
