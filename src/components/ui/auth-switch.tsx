@@ -26,10 +26,10 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
         name: String(formData.get("name") ?? ""),
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: "/onboarding",
       });
     } else {
-      handleSignIn({ email, password, callbackURL: "/dashboard" });
+      handleSignIn({ email, password, callbackURL: "/onboarding" });
     }
   };
 
@@ -114,7 +114,7 @@ function SocialIcons() {
         className="social-icon"
         onClick={(e) => {
           e.preventDefault();
-          handleSocialLogin({ provider: "google", callbackURL: "/dashboard" });
+          handleSocialLogin({ provider: "google", callbackURL: "/onboarding" });
         }}
         aria-label="Continue with Google"
       >
@@ -130,7 +130,7 @@ function SocialIcons() {
         className="social-icon"
         onClick={(e) => {
           e.preventDefault();
-          handleSocialLogin({ provider: "github", callbackURL: "/dashboard" });
+          handleSocialLogin({ provider: "github", callbackURL: "/onboarding" });
         }}
         aria-label="Continue with GitHub"
       >
