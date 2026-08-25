@@ -4,7 +4,7 @@ type AuthCredentials = {
 }
 
 export type CallbackURLs = {
-	callbackURL: "/dashboard"
+	callbackURL: "/onboarding"
 }
 
 export type SignInProps = AuthCredentials & CallbackURLs;

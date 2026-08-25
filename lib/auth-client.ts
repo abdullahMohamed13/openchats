@@ -1,5 +1,8 @@
-import { createAuthClient } from "better-auth/react"
+import { createAuthClient } from "better-auth/react";
+import { convexClient } from "@convex-dev/better-auth/client/plugins";
+import { inferAdditionalFields } from "better-auth/client/plugins";
+import type { auth } from "../convex/betterAuth/auth";
 
 export const authClient = createAuthClient({
-	baseURL: "http://localhost:3000/api/auth" // Change to openchats.qzz.io
-})
+	plugins: [inferAdditionalFields<typeof auth>(), convexClient()],
+});
