@@ -23,7 +23,7 @@ export default function CTABannerSection() {
         variant="highlight"
         title="Ready to Connect?"
         description="Your team deserves better conversations. Set up your workspace and start chatting in under a minute."
-        buttonAction={{ label: "Get Started", onClick: () => router.push('/login') }}
+        buttonAction={{ label: "Join Us Now", onClick: () => router.push('/login') }}
       />
     </div>
   )
