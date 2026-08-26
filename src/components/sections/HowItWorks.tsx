@@ -1,5 +1,5 @@
-import { Line } from "../shared/Line"
 import { MotionWrapper } from "../shared/MotionWrapper"
+import SectionHeader from "../shared/SectionHeader"
 import StepsCard from "./reusable/StepsCard"
 
 export interface StepsProps {
@@ -32,12 +32,7 @@ export default function HowItWorks() {
 			animate={{opacity: 1}}
 		>
 			<section className="section-padding">
-				<div className="mb-4 font-bold flex flex-col items-center md:items-start">
-					<p className="text-2xl font-quera">How It Works</p>
-					<Line className="-mt-5 rotate-179" />
-		
-					<p className="-mt-2 text-4xl capitalize text-center md:text-left">Getting started is simple.</p>
-				</div>
+				<SectionHeader label="How It Works" title="Getting started is simple" lineWidth={132} lineClassName="-mt-5 md:-translate-x-1" />
 				
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-around">
 					{steps.map((step: StepsProps) => (

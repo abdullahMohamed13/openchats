@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-import "@/components/ui/8bit/styles/retro.css";
+import "@/styles/retro.css";
 
 export const avatarVariants = cva("", {
   variants: {

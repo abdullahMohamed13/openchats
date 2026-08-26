@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Geist, Plus_Jakarta_Sans, Press_Start_2P } from "next/font/google";
 
-import "./globals.css";
+import "@/styles/globals.css";
 import { cn } from "@/lib/utils";
 import ConvexClientProvider from "@/providers/ConvexClientProvider";
 

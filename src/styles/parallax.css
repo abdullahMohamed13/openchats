@@ -1,0 +1,68 @@
+/* Parallax Scrolling */
+.parallax {
+	width: 100%;
+	overflow: hidden;
+	position: relative;
+}
+
+.parallax__header {
+	position: relative;
+	height: 100vh;
+	min-height: 600px;
+}
+
+.parallax__visuals {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+.parallax__black-line-overflow {
+	position: absolute;
+	inset: 0;
+	background: var(--background);
+	z-index: -1;
+}
+
+.parallax__layers {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.parallax__layer-img {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	will-change: transform;
+	user-select: none;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.parallax__layer-title {
+	position: relative;
+	z-index: 3;
+	text-align: center;
+	will-change: transform;
+}
+
+.parallax__fade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		180deg,
+		rgba(18, 98, 58, 0.85) 0%,
+		rgba(18, 98, 58, 0.90) 100%
+	);
+	z-index: 1;
+	pointer-events: none;
+}
+
+.parallax__content {
+	position: relative;
+	z-index: 5;
+}

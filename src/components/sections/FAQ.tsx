@@ -6,7 +6,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Line } from "@/components/shared/Line"
+import SectionHeader from "@/components/shared/SectionHeader"
+import { motion } from "framer-motion"
 
 const faqs = [
   {
@@ -53,21 +54,25 @@ const faqs = [
 export default function FAQSection() {
   return (
 		<section className="section-padding w-full gap-8">
-			
-      <div className="mb-4 font-bold flex flex-col items-center md:items-start">
-        <p className="text-2xl font-quera">FAQ</p>
-        <Line className="-mt-4 rotate-179 md:-translate-x-3" width={65} />
-        <p className="-mt-2 text-3xl md:text-4xl capitalize text-center md:text-left">Frequently Asked Questions</p>
-			</div>
+      
+      <SectionHeader label="FAQ" title="Frequently Asked Questions" />
       
       <Accordion className="w-full" type="single" collapsible>
-        {faqs.map((faq) => (
-          <AccordionItem key={faq.question} value={faq.question}>
-            <AccordionTrigger>{faq.question}</AccordionTrigger>
-            <AccordionContent>{faq.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+          {faqs.map((faq) => (
+            <motion.div
+              key={faq.question}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.4, ease: "easeInOut", delay: 0.2 }}
+            >
+              <AccordionItem value={faq.question}>
+                <AccordionTrigger>{faq.question}</AccordionTrigger>
+                <AccordionContent>{faq.answer}</AccordionContent>
+              </AccordionItem>
+            </motion.div>
+          ))}
+        </Accordion>
     </section>
   )
 }
