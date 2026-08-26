@@ -11,14 +11,14 @@ export default function Footer() {
 		<div className="mt-4 text-xs flex flex-col md:flex-row items-center md:items-start gap-4">
 			<p>© 2026 OpenChats All rights reserved</p>
 			<div className="flex gap-3">
-				<Link href='/cookie-policy' className="underline">
-					cookie policy
+				<Link href='/terms' className="underline">
+					terms
 				</Link>
 				<Link href='/privacy' className="underline">
 					privacy
 				</Link>
 				<a href='https://github.com/abdullahMohamed13' target="_blank" className="underline">
-					talk to us
+					contact the website guy
 				</a>
 			</div>
 		</div>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Line } from "@/components/shared/Line";
+import BackLink from "@/components/shared/GoBackLink";
 
 export type TocItem = {
 	id: string;
@@ -17,10 +17,10 @@ export function LegalPage({ title, lastUpdated, toc, children }: LegalPageProps)
 	return (
 		<main className="section-padding w-full">
 			<div className="mx-auto w-full max-w-3xl">
+				<BackLink href="/" text="Home" />
+
 				<div className="mb-4 font-bold flex flex-col items-center md:items-start">
-					<p className="text-2xl font-quera">Legal</p>
-					<Line className="-mt-4 rotate-179 md:-translate-x-3" width={65} />
-					<h1 className="-mt-2 text-3xl md:text-4xl text-center md:text-left">{title}</h1>
+					<h1 className="font-press-start mt-2 text-2xl md:text-3xl text-center md:text-left">{title}</h1>
 					<p className="mt-3 text-xs md:text-sm font-normal text-muted-foreground">Last updated: {lastUpdated}</p>
 				</div>
 
@@ -57,7 +57,7 @@ type LegalSectionProps = {
 export function LegalSection({ id, title, children }: LegalSectionProps) {
 	return (
 		<section id={id} className="scroll-mt-6 space-y-4">
-			<h2 className="text-xl md:text-2xl font-extrabold text-primary">{title}</h2>
+			<h2 className="text-xl md:text-2xl font-extrabold font-press-start text-primary">{title}</h2>
 			{children}
 		</section>
 	);

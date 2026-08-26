@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import {
 	LegalList,
 	LegalPage,
@@ -76,11 +75,7 @@ export default function PrivacyPage() {
 						<LegalSubTitle>Cookies and similar technologies</LegalSubTitle>
 						<LegalText>
 							Small files stored on your device that help the Service function and help us understand how it is
-							used. See our{" "}
-							<Link href="/cookie-policy" className="text-primary underline underline-offset-4">
-								Cookie Policy
-							</Link>{" "}
-							for details.
+							used.
 						</LegalText>
 					</div>
 				</div>
@@ -127,12 +122,7 @@ export default function PrivacyPage() {
 					technologies help us understand how the Service is used so we can improve it.
 				</LegalText>
 				<LegalText>
-					You can control or delete cookies through your browser settings at any time. To learn more about how we use
-					them, read our{" "}
-					<Link href="/cookie-policy" className="text-primary underline underline-offset-4">
-						Cookie Policy
-					</Link>
-					.
+					You can control or delete cookies through your browser settings at any time.
 				</LegalText>
 			</LegalSection>
 
