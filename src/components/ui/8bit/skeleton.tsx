@@ -1,7 +1,5 @@
 import { cn } from "@/lib/utils";
 
-import { Skeleton as ShadcnSkeleton } from "@/components/ui/skeleton";
-
 import "@/styles/retro.css";
 
 export interface BitSkeletonProp extends React.ComponentProps<"div"> {
@@ -13,12 +11,13 @@ function Skeleton({ children, ...props }: BitSkeletonProp) {
 
   return (
     <div className={cn("relative animate-pulse", className)}>
-      <ShadcnSkeleton
+      <div
+        data-slot="skeleton"
         {...props}
-        className={cn("rounded-none border-none bg-accent", "retro", className)}
+        className={cn("animate-pulse rounded-none border-none bg-accent", "retro", className)}
       >
         {children}
-      </ShadcnSkeleton>
+      </div>
 
       <div className="opacity-60">
         <div className="absolute -top-1.5 w-1/2 left-1.5 h-1.5 bg-foreground dark:bg-ring" />
