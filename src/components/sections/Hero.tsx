@@ -91,7 +91,11 @@ export default function HeroSection() {
 								<h1 className="font-brogetta font-bold text-6xl! md:text-7xl lg:text-8xl! -mt-4">
 									OpenChats
 								</h1>
-								<h3 className="md:italic capitalize mt-3">Your team | Your conversations | One place</h3>
+								<h3 className="capitalize mt-3 md:[&_span]:italic">
+									<span>Your team</span> |
+									<span>Your conversations</span> |
+									<span>One place</span>
+								</h3>
 							</div>
 							<p className="max-w-md text-sm md:text-base text-foreground/80">
 								Bring your teams, workspaces, channels, and direct conversations together in one place.
