@@ -5,7 +5,7 @@ export const handleSignOut = async (router: ReturnType<typeof useRouter>) => {
   await authClient.signOut({
     fetchOptions: {
       onSuccess: () => {
-        router.push("/login");
+        router.push("/signin");
       },
     },
   });
