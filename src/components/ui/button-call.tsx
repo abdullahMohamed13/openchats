@@ -1,6 +1,6 @@
 "use client"
 
-import { Phone } from "lucide-react"
+import { Phone } from "pixelarticons/react"
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion"
 import { useState } from "react"
