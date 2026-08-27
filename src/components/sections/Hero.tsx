@@ -7,6 +7,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import Lenis from "lenis";
 import { motion } from "framer-motion";
+import { DURATION_SLOW } from "@/lib/motion";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import BrutalButton from "../ui/brutal-button";
 
@@ -81,7 +82,7 @@ export default function HeroSection() {
 						<motion.div
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
-							transition={{ duration: 0.8 }}
+							transition={{ duration: DURATION_SLOW }}
 							data-parallax-layer="1" className="parallax__layer-title flex-col-center gap-4"
 						>
 							<div className="flex-col-center">

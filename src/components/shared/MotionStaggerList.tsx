@@ -1,5 +1,6 @@
 "use client"
 import { motion, type Variants } from "framer-motion"
+import { DURATION_SLOW } from "@/lib/motion"
 
 const container: Variants = {
 	hidden: {
@@ -17,7 +18,7 @@ const child: Variants = {
 	},
 	visible: {
 		opacity: 1, y: 0,
-		transition: { duration: 0.8, ease: "easeIn" }
+		transition: { duration: DURATION_SLOW, ease: "easeIn" }
 	}
 }
 

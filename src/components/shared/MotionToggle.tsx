@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookCallButton } from "@/components/ui/button-call";
+import { DURATION_FAST } from "@/lib/motion";
 
 export function MotionToggle({ first, second }: { first: string; second: string }) {
 	const [active, setActive] = useState(first);
@@ -15,7 +16,7 @@ export function MotionToggle({ first, second }: { first: string; second: string 
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				exit={{ opacity: 0, y: -8 }}
-				transition={{ duration: 0.2 }}
+				transition={{ duration: DURATION_FAST }}
 				className="capitalize"
 			>
 				<BookCallButton>
