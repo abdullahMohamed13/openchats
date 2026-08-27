@@ -26,6 +26,7 @@ docs
 # misc
 .DS_Store
 *.pem
+pnpm-workspace.yaml
 
 # debug
 npm-debug.log*

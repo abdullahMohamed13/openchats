@@ -1,4 +1,8 @@
-import { StepsProps } from "../HowItWorks";
+type StepsProps = {
+	id: number;
+	label: string;
+	description: string;
+};
 
 export default function StepsCard({id, label, description}: StepsProps) {
 	return <div className="flex flex-col gap-2">
