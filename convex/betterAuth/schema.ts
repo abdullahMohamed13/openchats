@@ -24,6 +24,7 @@ export const tables = {
     userId: v.optional(v.union(v.null(), v.string())),
     callEnabled: v.optional(v.union(v.null(), v.boolean())),
     phone: v.optional(v.union(v.null(), v.string())),
+    phoneVerified: v.optional(v.union(v.null(), v.boolean())),
     badge: v.optional(v.union(v.null(), v.string())),
     gender: v.optional(v.union(v.null(), v.string())),
   })
