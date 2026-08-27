@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { DURATION_FAST } from "@/lib/motion";
 import {
-	ArrowLeft,
-	ArrowRight,
-	Info,
-	Phone,
+	CircleInfo,
 	User,
-} from "lucide-react";
+} from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
 import BrutalButton from "@/components/ui/brutal-button";
 import { Progress } from "@/components/ui/8bit/progress";
@@ -22,6 +20,10 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/8bit/dropdown-menu";
+import arrowIcon from "@/assets/icons/arrow.webp";
+import PhoneInput from "./PhoneInput";
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
+import type { CountryCode } from "libphonenumber-js/max";
 
 import { AVATARS } from "../../data/avatars";
 import { BADGES } from "../../data/badges";
@@ -29,7 +31,6 @@ import { BADGES } from "../../data/badges";
 type Gender = "" | "male" | "female";
 
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,20}$/;
-const PHONE_PATTERN = /^\+?[0-9][0-9\s-]{6,14}$/;
 
 const STEPS = [
 	{ title: "Username", subtitle: "What should we call you?" },
@@ -43,6 +44,7 @@ export default function OnboardingWizard() {
 	const [step, setStep] = useState(0);
 	const [username, setUsername] = useState("");
 	const [phone, setPhone] = useState("");
+	const [phoneCountry, setPhoneCountry] = useState<CountryCode>("EG");
 	const [gender, setGender] = useState<Gender>("");
 	const [selectedAvatar, setSelectedAvatar] = useState<StaticImageData | null>(null);
 	const [selectedBadge, setSelectedBadge] = useState<StaticImageData | null>(null);
@@ -66,11 +68,16 @@ export default function OnboardingWizard() {
 	const avatars =
 		gender === "male" ? AVATARS.male : gender === "female" ? AVATARS.female : [];
 
+	const phoneComplete = useMemo(() => {
+		if (!phone.trim()) return false;
+		return parsePhoneNumberFromString(phone, phoneCountry)?.isValid() === true;
+	}, [phone, phoneCountry]);
+
 	const canProceed =
 		step === 0
 			? USERNAME_PATTERN.test(username.trim())
 			: step === 1
-				? PHONE_PATTERN.test(phone.trim())
+				? phoneComplete
 				: step === 2
 					? gender !== "" && selectedAvatar !== null
 					: selectedBadge !== null;
@@ -78,7 +85,7 @@ export default function OnboardingWizard() {
 	const progressValue = Math.round(
 		([
 			USERNAME_PATTERN.test(username.trim()),
-			PHONE_PATTERN.test(phone.trim()),
+			phoneComplete,
 			gender !== "" && selectedAvatar !== null,
 			selectedBadge !== null,
 		].filter(Boolean).length /
@@ -111,7 +118,7 @@ export default function OnboardingWizard() {
 		const { error: updateError } = await authClient.updateUser({
 			name: username.trim(),
 			image: selectedAvatar.src,
-			phone: phone.trim(),
+			...(phone.trim() ? { phone: phone.trim(), phoneVerified: false } : {}),
 			gender,
 			badge: selectedBadge.src,
 		});
@@ -148,7 +155,7 @@ export default function OnboardingWizard() {
 									initial={{ opacity: 0, scale: 0.8 }}
 									animate={{ opacity: 1, scale: 1 }}
 									exit={{ opacity: 0, scale: 0.9 }}
-									transition={{ duration: 0.2, ease: "easeOut" }}
+									transition={{ duration: DURATION_FAST, ease: "easeOut" }}
 									className="animate-pulse retro flex-center pointer-events-none absolute inset-0 text-[8px] tracking-wider "
 								>
 									LEVEL UP!
@@ -179,7 +186,8 @@ export default function OnboardingWizard() {
 							</label>
 							<div className="relative">
 								<User
-									size={16}
+									width={16}
+									height={16}
 									className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
 								/>
 								<Input
@@ -205,25 +213,20 @@ export default function OnboardingWizard() {
 							<label htmlFor="phone" className="mb-2 block text-sm ">
 								Phone number
 							</label>
-							<div className="relative">
-								<Phone
-									size={16}
-									className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
-								/>
-								<Input
-									id="phone"
-									type="tel"
-									value={phone}
-									onChange={(e) => setPhone(e.target.value)}
-									placeholder="+20 100 123 4567"
-									autoComplete="tel"
-									className="h-12 pl-9 "
-								/>
-							</div>
+							<PhoneInput
+								id="phone"
+								value={phone}
+								onChange={setPhone}
+								country={phoneCountry}
+								onChangeCountry={setPhoneCountry}
+								placeholder="e.g. 101 234 5678 for Egypt"
+								autoComplete="tel"
+								className="h-12 rounded-none"
+							/>
 							<p className="mt-2 text-xs text-muted-foreground">
-								Include your country code, e.g. +20 for Egypt.
+								Enter your full number for the selected country.
 							</p>
-							<div className="mt-1">
+							<div className="mt-1 flex items-center justify-between">
 							<span
 								tabIndex={0}
 								role="note"
@@ -233,7 +236,7 @@ export default function OnboardingWizard() {
 								}}
 								className="group relative inline-flex cursor-help items-center gap-1.5 outline-none"
 							>
-								<Info size={14} className="shrink-0 text-accent" />
+								<CircleInfo width={14} height={14} className="shrink-0 text-accent" />
 								<span className="text-xs text-accent underline transition-colors group-hover:text-foreground group-focus-visible:text-foreground">
 									Why do we need this?
 								</span>
@@ -246,6 +249,17 @@ export default function OnboardingWizard() {
 									</span>
 								)}
 							</span>
+							<button
+								type="button"
+								className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
+								onClick={() => {
+									setPhone("");
+									setError(null);
+									setStep((current) => Math.min(current + 1, STEPS.length - 1));
+								}}
+							>
+								Skip phone number for now
+							</button>
 						</div>
 
 							<AnimatePresence>
@@ -254,7 +268,7 @@ export default function OnboardingWizard() {
 										initial={{ opacity: 0 }}
 										animate={{ opacity: 1 }}
 										exit={{ opacity: 0 }}
-										transition={{ duration: 0.2, ease: "easeOut" }}
+										transition={{ duration: DURATION_FAST, ease: "easeOut" }}
 										className="fixed inset-0 z-50 flex-center px-6"
 										role="dialog"
 										aria-modal="true"
@@ -379,7 +393,7 @@ export default function OnboardingWizard() {
 										initial={{ opacity: 0, y: 12, scale: 0.96 }}
 										animate={{ opacity: 1, y: 0, scale: 1 }}
 										exit={{ opacity: 0, y: 8, scale: 0.97 }}
-										transition={{ duration: 0.2, ease: "easeOut" }}
+										transition={{ duration: DURATION_FAST, ease: "easeOut" }}
 										className="mt-4 border-2 border-foreground bg-popover p-4 dark:border-ring"
 									>
 										<div className="flex items-center gap-4">
@@ -437,7 +451,7 @@ export default function OnboardingWizard() {
 										initial={{ opacity: 0, y: 12 }}
 										animate={{ opacity: 1, y: 0 }}
 										exit={{ opacity: 0, y: 8 }}
-										transition={{ duration: 0.2, ease: "easeOut" }}
+										transition={{ duration: DURATION_FAST, ease: "easeOut" }}
 										className="mt-4 flex items-center gap-3 border-2 border-foreground bg-popover p-3 dark:border-ring"
 									>
 										<Image
@@ -462,37 +476,47 @@ export default function OnboardingWizard() {
 				</p>
 			)}
 
-			<div className="mt-8 flex items-center justify-between gap-3">
-				{step > 0 ? (
-					<BrutalButton
-						type="button"
-						onClick={goBack}
-						color="var(--muted)"
-						textColor="var(--muted-foreground)"
-						borderColor="var(--border)"
-						shadowColor="var(--border)"
-						className="gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-					>
-						<ArrowLeft size={16} />
-						Back
-					</BrutalButton>
-				) : (
-					<span />
-				)}
-
+		<div className="mt-8 flex items-center justify-between gap-3">
+			{step > 0 ? (
 				<BrutalButton
 					type="button"
-					onClick={step === STEPS.length - 1 ? handleFinish : goNext}
-					disabled={!canProceed || saving}
-					color="var(--primary)"
-					textColor="var(--foreground)"
-					borderColor="var(--foreground)"
-					className="gap-2 px-5 py-2 uppercase tracking-wider text-sm! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+					onClick={goBack}
+					color="var(--muted)"
+					textColor="var(--muted-foreground)"
+					borderColor="var(--border)"
+					shadowColor="var(--border)"
+					className="gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 				>
-					{step === STEPS.length - 1 ? (saving ? "Saving..." : "Finish") : "Continue"}
-					{step !== STEPS.length - 1 && <ArrowRight size={16} />}
+					<Image src={arrowIcon} alt="Back" width={20} height={20} className="rotate-180" />
+					Back
 				</BrutalButton>
-			</div>
+			) : (
+				<span />
+			)}
+
+			<BrutalButton
+				type="button"
+				onClick={step === STEPS.length - 1 ? handleFinish : goNext}
+				disabled={!canProceed || saving}
+				color="var(--primary)"
+				textColor="var(--foreground)"
+				borderColor="var(--foreground)"
+				className="gap-2 px-5 py-2 uppercase tracking-wider text-sm! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+			>
+				{step === STEPS.length - 1 ? (saving ? "Saving..." : "Finish") : "Continue"}
+				{step !== STEPS.length - 1 && <Image src={arrowIcon} alt="Next" width={20} height={20} />}
+			</BrutalButton>
+		</div>
+
+		<div className="mt-4 text-center">
+			<button
+				type="button"
+				onClick={() => router.push("/")}
+				className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
+			>
+				Skip onboarding for now
+			</button>
+		</div>
 		</div>
 	);
 }

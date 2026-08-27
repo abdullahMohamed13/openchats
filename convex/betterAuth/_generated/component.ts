@@ -40,6 +40,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   name: string;
                   phone?: null | string;
+                  phoneVerified?: null | boolean;
                   updatedAt: number;
                   userId?: null | string;
                 };
@@ -118,6 +119,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userId"
                     | "callEnabled"
                     | "phone"
+                    | "phoneVerified"
                     | "badge"
                     | "gender"
                     | "_id";
@@ -315,6 +317,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userId"
                     | "callEnabled"
                     | "phone"
+                    | "phoneVerified"
                     | "badge"
                     | "gender"
                     | "_id";
@@ -573,6 +576,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   name?: string;
                   phone?: null | string;
+                  phoneVerified?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
                 };
@@ -588,6 +592,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userId"
                     | "callEnabled"
                     | "phone"
+                    | "phoneVerified"
                     | "badge"
                     | "gender"
                     | "_id";
@@ -819,6 +824,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   name?: string;
                   phone?: null | string;
+                  phoneVerified?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
                 };
@@ -834,6 +840,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userId"
                     | "callEnabled"
                     | "phone"
+                    | "phoneVerified"
                     | "badge"
                     | "gender"
                     | "_id";

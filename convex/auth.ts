@@ -45,6 +45,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					type: "string",
 					required: false,
 				},
+				phoneVerified: {
+					type: "boolean",
+					required: false,
+				},
 				badge: {
 					type: "string",
 					required: false,
