@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - "feat/**"
+      
+  pull_request:
+    branches:
+      - develop
+      - main
+      
+jobs:
+  my_checks_bro:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm # because optimization (reuse the last run cashe)
+
+      - run: pnpm install --frozen-lockfile # if pnpm-lock.yml is not consistent with the project reqs => fail
+      - run: pnpm lint
+      - run: pnpm exec tsc --noEmit # check typeScript without generating js files
+      - run: pnpm build # answer this question: does this version can produce a production build?
