@@ -5,6 +5,7 @@ import { Geist, Plus_Jakarta_Sans, Press_Start_2P } from "next/font/google";
 import "@/styles/globals.css";
 import { cn } from "@/lib/utils";
 import ConvexClientProvider from "@/providers/ConvexClientProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -86,6 +87,7 @@ export default function RootLayout({
 				<ConvexClientProvider>
 					{children}
 				</ConvexClientProvider>
+				<Toaster />
       </body>
     </html>
   );
