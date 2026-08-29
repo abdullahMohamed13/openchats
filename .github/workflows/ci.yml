@@ -15,6 +15,9 @@ jobs:
   my_checks_bro:
     runs-on: ubuntu-22.04
 
+    env:
+      CONVEX_SITE_URL: ${{ secrets.CONVEX_SITE_URL }}
+
     steps:
       - uses: actions/checkout@v4
 
