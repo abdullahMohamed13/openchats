@@ -7,12 +7,16 @@ export type CallbackURLs = {
 	callbackURL: "/onboarding"
 }
 
-export type SignInProps = AuthCredentials & CallbackURLs;
+export type AuthSetLoading = {
+	setLoading?: (v:boolean) => void,
+}
+
+export type SignInProps = AuthCredentials & CallbackURLs & AuthSetLoading;
 
 export type SignUpProps = {
 	name: string,
 	image?: string,
-} & AuthCredentials & CallbackURLs
+} & AuthCredentials & CallbackURLs & AuthSetLoading
 
 export type SocialProviders = {
 	provider: "github" | "google"

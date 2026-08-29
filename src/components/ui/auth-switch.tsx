@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, User } from "pixelarticons/react";
+import { Lock, Mail, User, Loading, Google, Github } from "pixelarticons/react";
 import { handleSignIn } from "@/lib/sign-in";
 import { handleSignup } from "@/lib/sign-up";
 import { handleSocialLogin } from "@/lib/social";
-import { Google, Github } from "pixelarticons/react";
 
 export type AuthSwitchProps = {
   initialMode?: "sign-in" | "sign-up";
@@ -15,6 +14,7 @@ export type AuthSwitchProps = {
 export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps = {}) {
   const router = useRouter();
   const isSignUp = initialMode === "sign-up";
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,9 +28,10 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
         email,
         password,
         callbackURL: "/onboarding",
+        setLoading,
       });
     } else {
-      handleSignIn({ email, password, callbackURL: "/onboarding" });
+      handleSignIn({ email, password, callbackURL: "/onboarding", setLoading });
     }
   };
 
@@ -51,7 +52,9 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
                 <i><Lock width={20} height={20} /></i>
                 <input type="password" name="password" placeholder="Password" />
               </div>
-              <button type="submit" className="btn btn-primary">Sign in</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? <Loading width={18} height={18} className="animate-spin" /> : "Sign in"}
+              </button>
               <button
                 type="button"
                 className="guest-btn"
@@ -61,7 +64,7 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
               </button>
               <p className="social-text">Or sign in with social platforms</p>
               <div className="social-media">
-                <SocialIcons />
+                <SocialIcons setLoading={setLoading} />
               </div>
             </form>
 
@@ -85,7 +88,9 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
                 <i><Lock width={20} height={20} /></i>
                 <input type="password" name="password" placeholder="Password" />
               </div>
-              <button type="submit" className="btn btn-primary">Create Account</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? <Loading width={18} height={18} className="animate-spin" /> : "Create Account"}
+              </button>
               <button
                 type="button"
                 className="guest-btn"
@@ -95,7 +100,7 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
               </button>
               <p className="social-text">Or sign up with social platforms</p>
               <div className="social-media">
-                <SocialIcons />
+                <SocialIcons setLoading={setLoading} />
               </div>
             </form>
           </div>
@@ -127,7 +132,7 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
   );
 }
 
-function SocialIcons() {
+function SocialIcons({ setLoading }: { setLoading: (loading: boolean) => void }) {
   return (
     <>
       <a
@@ -135,7 +140,7 @@ function SocialIcons() {
         className="social-icon"
         onClick={(e) => {
           e.preventDefault();
-          handleSocialLogin({ provider: "google", callbackURL: "/onboarding" });
+          handleSocialLogin({ provider: "google", callbackURL: "/onboarding", setLoading });
         }}
         aria-label="Continue with Google"
       >
@@ -147,7 +152,7 @@ function SocialIcons() {
         className="social-icon"
         onClick={(e) => {
           e.preventDefault();
-          handleSocialLogin({ provider: "github", callbackURL: "/onboarding" });
+          handleSocialLogin({ provider: "github", callbackURL: "/onboarding", setLoading });
         }}
         aria-label="Continue with GitHub"
       >
@@ -294,6 +299,15 @@ const authSwitchStyles = `
   cursor: pointer;
   transition: 0.2s;
   padding: 0 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-switch .btn:disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .auth-switch .btn-primary {
@@ -540,9 +554,12 @@ const authSwitchStyles = `
     padding: 0.5rem 0;
   }
   .auth-switch .btn-outline {
-    width: 110px;
+    min-width: 110px;
     height: 38px;
+    padding: 0 1rem;
     font-size: 0.7rem;
+    white-space: nowrap;
+    width: auto;
   }
   .auth-switch .container:before {
     width: 1500px;
