@@ -1,30 +1,27 @@
 import { authClient } from './auth-client';
-import { ErrorContext } from 'better-auth/react';
-import { SignUpProps } from '@/types/auth';
+import type { ErrorContext } from 'better-auth/react';
+import { toast } from '@/components/ui/8bit/toast';
+import type { SignUpProps, AuthSetLoading } from '@/types/auth';
 
-// Show Loading
-const onRequest = () => {
-}
-
-//redirect to the dashboard or sign in page
-const onSuccess = () => {
-}
-
-const onError = (ctx: ErrorContext) => {
-}
-
-export const handleSignup = async ({ email, password, name, image, callbackURL} : SignUpProps) => {
-	
-	const { data, error } = await authClient.signUp.email({
-		email,
-		password,
-		name,
-		image,
-		callbackURL,
-	},
-	{
-		onRequest,
-		onSuccess,
-		onError,
-	})
+export const handleSignup = async ({ email, password, name, image, callbackURL, setLoading }: SignUpProps & AuthSetLoading) => {
+	await authClient.signUp.email(
+		{
+			email,
+			password,
+			name,
+			image,
+			callbackURL,
+		},
+		{
+			onRequest: () => setLoading?.(true),
+			onSuccess: () => {
+				setLoading?.(false)
+				window.location.assign(callbackURL)
+			},
+			onError: (ctx: ErrorContext) => {
+				setLoading?.(false)
+				toast(ctx.error.message ?? "Something went wrong")
+			},
+		}
+	)
 }

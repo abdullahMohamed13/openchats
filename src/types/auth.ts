@@ -3,17 +3,28 @@ type AuthCredentials = {
   password: string
 }
 
-export type CallbackURLs = {
-	callbackURL: "/onboarding"
+type AuthSetLoading = {
+	setLoading?: (v:boolean) => void,
 }
 
-export type SignInProps = AuthCredentials & CallbackURLs;
+type SignInProps = AuthCredentials & AuthSetLoading & {
+	callbackURL: "/dashboard"
+};
 
-export type SignUpProps = {
+type SignUpProps = {
 	name: string,
 	image?: string,
-} & AuthCredentials & CallbackURLs
+	callbackURL: "/onboarding"
+} & AuthCredentials & AuthSetLoading
 
-export type SocialProviders = {
+type SocialProviders = {
 	provider: "github" | "google"
 }
+
+type UsernameSignInProps = AuthSetLoading & {
+	username: string;
+	password: string;
+	callbackURL: "/dashboard";
+};
+
+export type { SocialProviders, AuthSetLoading, SignInProps, SignUpProps, UsernameSignInProps }

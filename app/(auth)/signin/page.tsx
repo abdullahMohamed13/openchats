@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SignInForm from "./signin-form";
+import AuthSwitch from "@/components/ui/auth-switch";
 
 export const metadata: Metadata = {
 	title: "Sign In",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function SignInPage() {
-	return <SignInForm />
+	return <AuthSwitch initialMode="sign-in" />;
 }
