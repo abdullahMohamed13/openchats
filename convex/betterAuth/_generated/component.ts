@@ -43,6 +43,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   phoneVerified?: null | boolean;
                   updatedAt: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 model: "user";
               }
@@ -122,6 +123,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phoneVerified"
                     | "badge"
                     | "gender"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -320,6 +322,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phoneVerified"
                     | "badge"
                     | "gender"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -579,6 +582,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   phoneVerified?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -595,6 +599,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phoneVerified"
                     | "badge"
                     | "gender"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -827,6 +832,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   phoneVerified?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -843,6 +849,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phoneVerified"
                     | "badge"
                     | "gender"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
