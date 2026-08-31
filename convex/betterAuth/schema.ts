@@ -27,10 +27,12 @@ export const tables = {
     phoneVerified: v.optional(v.union(v.null(), v.boolean())),
     badge: v.optional(v.union(v.null(), v.string())),
     gender: v.optional(v.union(v.null(), v.string())),
+    username: v.optional(v.union(v.null(), v.string())),
   })
     .index("email_name", ["email","name"])
     .index("name", ["name"])
-    .index("userId", ["userId"]),
+    .index("userId", ["userId"])
+    .index("username", ["username"]),
   session: defineTable({
     expiresAt: v.number(),
     token: v.string(),
