@@ -1,16 +1,11 @@
 "use client"
 
+import { Skeleton } from "@/components/ui/8bit/skeleton";
+import { useRandomFact } from "@/hooks/useRandomFact";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export default function NotFound() {
-	const [response, setResponse] = useState<string>("Go Back Home Boy!")
-
-	useEffect(() => {
-		fetch('https://uselessfacts.jsph.pl/api/v2/facts/random').
-		then(res => res.json()).
-		then(data => setResponse(data.text))
-	}, [])
+	const {fact, loading} = useRandomFact()
 	
 	return (
 		<section className="min-h-screen flex-col-center gap-4 px-6 text-center"
@@ -25,7 +20,11 @@ export default function NotFound() {
 
 			<div>
 				<h3 className="mb-2 text-secondary">Here{"'"}s your random fact:</h3>
-				<p className="font-bold max-w-3xl">{response}</p>
+				{
+					loading ? 
+						<Skeleton /> :
+						<p className="font-bold max-w-3xl">{fact}</p>
+				}
 			</div>
 			<Link href="/">
 				<button className="text-primary underline cursor-pointer" aria-label="Go Home Button">Go Home</button>
