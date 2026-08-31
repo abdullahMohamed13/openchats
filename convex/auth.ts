@@ -17,9 +17,20 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 	}
 );
 
+const dynamicBaseURL = {
+	allowedHosts: [
+		"localhost",
+		"localhost:3000",
+		"127.0.0.1",
+		"127.0.0.1:3000",
+		"openchats.qzz.io",
+	],
+	fallback: siteUrl,
+};
+
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
-		baseURL: siteUrl,
+		baseURL: dynamicBaseURL,
 		database: authComponent.adapter(ctx),
 		trustedOrigins: ["http://localhost:3000"],
 		emailAndPassword: {
@@ -55,6 +66,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					required: false,
 				},
 				gender: {
+					type: "string",
+					required: false,
+				},
+				username: {
 					type: "string",
 					required: false,
 				},
