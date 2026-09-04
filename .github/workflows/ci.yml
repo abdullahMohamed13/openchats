@@ -15,6 +15,10 @@ jobs:
   my_checks_bro:
     runs-on: ubuntu-22.04
 
+    env:
+      NEXT_PUBLIC_CONVEX_URL: https://tangible-bulldog-635.convex.cloud
+      NEXT_PUBLIC_CONVEX_SITE_URL: https://tangible-bulldog-635.convex.site
+
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +32,7 @@ jobs:
           cache: pnpm # because optimization (reuse the last run cashe)
 
       - run: pnpm install --frozen-lockfile # if pnpm-lock.yml is not consistent with the project reqs => fail
+      - run: pnpm exec next typegen # generate next types (`next-enx.d.ts` and .next/types)  
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit # check typeScript without generating js files
       - run: pnpm build # answer this question: does this version can produce a production build?
