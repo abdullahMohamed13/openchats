@@ -1,0 +1,16 @@
+export const CHARACTERS: string[] = [
+	"/images/characters/abdelaziz.png",
+	"/images/characters/abyusif.webp",
+	"/images/characters/arthur.jpg",
+	"/images/characters/dare.jpg",
+	"/images/characters/gafour.png",
+	"/images/characters/john-snow.png",
+	"/images/characters/kratos.jpg",
+	"/images/characters/lalo.jpeg",
+	"/images/characters/magnus.jpg",
+	"/images/characters/niko.png",
+	"/images/characters/pusniher.webp",
+	"/images/characters/saul.png",
+	"/images/characters/total.jpg",
+	"/images/characters/walter.png",
+];
