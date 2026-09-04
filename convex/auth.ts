@@ -65,13 +65,18 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					type: "string",
 					required: false,
 				},
-				gender: {
+				role: {
 					type: "string",
 					required: false,
 				},
 				username: {
 					type: "string",
 					required: false,
+				},
+				onboarded: {
+					type: "boolean",
+					required: false,
+					defaultValue: false,
 				},
 			},
 		},
