@@ -26,8 +26,9 @@ export const tables = {
     phone: v.optional(v.union(v.null(), v.string())),
     phoneVerified: v.optional(v.union(v.null(), v.boolean())),
     badge: v.optional(v.union(v.null(), v.string())),
-    gender: v.optional(v.union(v.null(), v.string())),
+    role: v.optional(v.union(v.null(), v.string())),
     username: v.optional(v.union(v.null(), v.string())),
+    onboarded: v.optional(v.union(v.null(), v.boolean())),
   })
     .index("email_name", ["email","name"])
     .index("name", ["name"])
