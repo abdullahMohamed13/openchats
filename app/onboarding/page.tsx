@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import OnboardingGuard from "@/components/onboarding/OnboardingGuard";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function OnboardingPage() {
 		>
 			<div aria-hidden className="absolute inset-0 bg-background/90" />
 			<div className="relative z-10">
-				<OnboardingWizard />
+				<OnboardingGuard>
+					<OnboardingWizard />
+				</OnboardingGuard>
 			</div>
 		</main>
 	);

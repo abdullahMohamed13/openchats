@@ -1,15 +1,12 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
-import Image, { type StaticImageData } from "next/image";
+import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { DURATION_FAST } from "@/lib/motion";
-import {
-	CircleInfo,
-	User,
-} from "pixelarticons/react";
+import { User } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
 import BrutalButton from "@/components/ui/brutal-button";
 import { Progress } from "@/components/ui/8bit/progress";
@@ -21,87 +18,130 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/8bit/dropdown-menu";
 import arrowIcon from "@/assets/icons/arrow.webp";
-import PhoneInput from "./PhoneInput";
-import { parsePhoneNumberFromString } from "libphonenumber-js/max";
-import type { CountryCode } from "libphonenumber-js/max";
+import { resolveEmailByUsername } from "@/lib/resolveEmailByUsername";
 
-import { AVATARS } from "../../data/avatars";
+import { CHARACTERS } from "../../data/characters";
 import { BADGES } from "../../data/badges";
 
-type Gender = "" | "male" | "female";
+const ROLES = [
+	"Team lead",
+	"Team member",
+	"Student",
+	"Club member",
+	"Community organizer",
+	"Project collaborator",
+] as const;
+
+type Role = (typeof ROLES)[number];
 
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,20}$/;
 
+const slugifyName = (name?: string | null): string => {
+	if (!name) return "";
+	return name
+		.toLowerCase()
+		.trim()
+		.replace(/\s+/g, "_")
+		.replace(/[^a-z0-9_.]/g, "")
+		.slice(0, 20);
+};
+
 const STEPS = [
 	{ title: "Username", subtitle: "What should we call you?" },
-	{ title: "Phone", subtitle: "How can we reach you?" },
-	{ title: "Avatar", subtitle: "Make it yours, pick an avatar you like" },
+	// { title: "Phone", subtitle: "How can we reach you?" },
+	{ title: "Avatar", subtitle: "Pick your role and choose an avatar" },
 	{ title: "Badge", subtitle: "Pick a badge that represents you" },
 ] as const;
 
 export default function OnboardingWizard() {
 	const router = useRouter();
+	const { data: session } = authClient.useSession();
+
 	const [step, setStep] = useState(0);
-	const [username, setUsername] = useState("");
-	const [phone, setPhone] = useState("");
-	const [phoneCountry, setPhoneCountry] = useState<CountryCode>("EG");
-	const [gender, setGender] = useState<Gender>("");
-	const [selectedAvatar, setSelectedAvatar] = useState<StaticImageData | null>(null);
-	const [selectedBadge, setSelectedBadge] = useState<StaticImageData | null>(null);
+	const [username, setUsername] = useState<string>(() => slugifyName(session?.user.name));
+	const [role, setRole] = useState<Role | "">("");
+	const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+	const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
 	const [previewing, setPreviewing] = useState(false);
-	const [phoneInfoOpen, setPhoneInfoOpen] = useState(false);
+	const [usingExistingImage, setUsingExistingImage] = useState(false);
+	const [customImage, setCustomImage] = useState<string | null>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	function subscribeToHover(onStoreChange: () => void) {
-		const hoverQuery = window.matchMedia("(hover: hover)");
-		hoverQuery.addEventListener("change", onStoreChange);
-		return () => hoverQuery.removeEventListener("change", onStoreChange);
-	}
-
-	const canHover = useSyncExternalStore(
-		subscribeToHover,
-		() => window.matchMedia("(hover: hover)").matches,
-		() => true
-	);
 	const [saving, setSaving] = useState(false);
+	const [checkingUsername, setCheckingUsername] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const avatars =
-		gender === "male" ? AVATARS.male : gender === "female" ? AVATARS.female : [];
-
-	const phoneComplete = useMemo(() => {
-		if (!phone.trim()) return false;
-		return parsePhoneNumberFromString(phone, phoneCountry)?.isValid() === true;
-	}, [phone, phoneCountry]);
+	const existingImage = session?.user.image ?? null;
+	const finalImage = usingExistingImage
+		? existingImage
+		: customImage ?? selectedAvatar ?? null;
 
 	const canProceed =
 		step === 0
 			? USERNAME_PATTERN.test(username.trim())
 			: step === 1
-				? phoneComplete
-				: step === 2
-					? gender !== "" && selectedAvatar !== null
-					: selectedBadge !== null;
+				? role !== "" && (usingExistingImage || customImage !== null || selectedAvatar !== null)
+				: selectedBadge !== null;
 
 	const progressValue = Math.round(
 		([
 			USERNAME_PATTERN.test(username.trim()),
-			phoneComplete,
-			gender !== "" && selectedAvatar !== null,
+			role !== "" && (usingExistingImage || customImage !== null || selectedAvatar !== null),
 			selectedBadge !== null,
 		].filter(Boolean).length /
 			STEPS.length) *
 			100
 	);
 
-	const handleGenderChange = (value: Gender) => {
-		setGender(value);
-		setSelectedAvatar(null);
+	const handleRoleChange = (value: Role) => {
+		setRole(value);
 		setPreviewing(false);
 	};
 
-	const goNext = () => {
-		if (!canProceed) return;
+	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		e.target.value = "";
+		if (!file) return;
+
+		if (!file.type.startsWith("image/")) {
+			setError("Please choose an image file.");
+			return;
+		}
+
+		const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
+		if (file.size > MAX_IMAGE_SIZE) {
+			setError("Image is too large. Please choose a file under 3MB.");
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (typeof reader.result === "string") {
+				setCustomImage(reader.result);
+				setSelectedAvatar(null);
+				setUsingExistingImage(false);
+				setPreviewing(false);
+				setError(null);
+			}
+		};
+		reader.readAsDataURL(file);
+	};
+
+	const goNext = async () => {
+		if (!canProceed || checkingUsername) return;
 		setError(null);
+
+		if (step === 0) {
+			setCheckingUsername(true);
+			const email = await resolveEmailByUsername(username.trim());
+			setCheckingUsername(false);
+
+			if (email && email !== session?.user.email) {
+				setError("This username is already taken. Try another one.");
+				return;
+			}
+		}
+
 		setStep((current) => Math.min(current + 1, STEPS.length - 1));
 	};
 
@@ -111,16 +151,24 @@ export default function OnboardingWizard() {
 	};
 
 	const handleFinish = async () => {
-		if (!selectedAvatar || !selectedBadge || saving) return;
+		if (!finalImage || !selectedBadge || saving) return;
 		setSaving(true);
 		setError(null);
 
+		const email = await resolveEmailByUsername(username.trim());
+		if (email && email !== session?.user.email) {
+			setError("This username is already taken. Try another one.");
+			setSaving(false);
+			return;
+		}
+
 		const { error: updateError } = await authClient.updateUser({
 			name: username.trim(),
-			image: selectedAvatar.src,
-			...(phone.trim() ? { phone: phone.trim(), phoneVerified: false } : {}),
-			gender,
-			badge: selectedBadge.src,
+			username: username.trim(),
+			image: finalImage,
+			role,
+			badge: selectedBadge,
+			onboarded: true,
 		});
 
 		if (updateError) {
@@ -129,7 +177,12 @@ export default function OnboardingWizard() {
 			return;
 		}
 
-		router.push("/onboarding");
+		router.push("/dashboard");
+	};
+
+	const handleSkip = async () => {
+		await authClient.updateUser({ onboarded: false });
+		router.push("/dashboard");
 	};
 
 	const currentStep = STEPS[step];
@@ -210,164 +263,168 @@ export default function OnboardingWizard() {
 
 					{step === 1 && (
 						<div>
-							<label htmlFor="phone" className="mb-2 block text-sm ">
-								Phone number
-							</label>
-							<PhoneInput
-								id="phone"
-								value={phone}
-								onChange={setPhone}
-								country={phoneCountry}
-								onChangeCountry={setPhoneCountry}
-								placeholder="e.g. 101 234 5678 for Egypt"
-								autoComplete="tel"
-								className="h-12 rounded-none"
-							/>
-							<p className="mt-2 text-xs text-muted-foreground">
-								Enter your full number for the selected country.
-							</p>
-							<div className="mt-1 flex items-center justify-between">
-							<span
-								tabIndex={0}
-								role="note"
-								aria-label="Why do we need your phone number?"
-								onClick={() => {
-									if (!canHover) setPhoneInfoOpen(true);
-								}}
-								className="group relative inline-flex cursor-help items-center gap-1.5 outline-none"
-							>
-								<CircleInfo width={14} height={14} className="shrink-0 text-accent" />
-								<span className="text-xs text-accent underline transition-colors group-hover:text-foreground group-focus-visible:text-foreground">
-									Why do we need this?
-								</span>
-								{canHover && (
-									<span
-										aria-hidden
-										className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 w-60 rounded-lg border border-border bg-muted p-2.5 text-left text-xs leading-relaxed text-foreground opacity-0 shadow-shadow transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
-									>
-										We&apos;ll use this in future features such as WhatsApp notifications.
-									</span>
-								)}
-							</span>
-							<button
-								type="button"
-								className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
-								onClick={() => {
-									setPhone("");
-									setError(null);
-									setStep((current) => Math.min(current + 1, STEPS.length - 1));
-								}}
-							>
-								Skip phone number for now
-							</button>
-						</div>
-
-							<AnimatePresence>
-								{!canHover && phoneInfoOpen && (
-									<motion.div
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										exit={{ opacity: 0 }}
-										transition={{ duration: DURATION_FAST, ease: "easeOut" }}
-										className="fixed inset-0 z-50 flex-center px-6"
-										role="dialog"
-										aria-modal="true"
-										aria-label="Why do we need your phone number?"
-									>
+							{existingImage && (
+								<div className="mb-4">
+									<p className="mb-2 text-xs text-muted-foreground">Profile picture</p>
+									<div className="grid grid-cols-2 gap-3">
 										<button
-											aria-label="Close"
-											className="absolute inset-0 cursor-default bg-background/70"
-											onClick={() => setPhoneInfoOpen(false)}
-										/>
-										<div className="relative w-full max-w-xs border-2 border-foreground bg-popover p-4 dark:border-ring">
-											<p className="text-sm leading-relaxed text-foreground">
-												We&apos;ll use this in future features such as WhatsApp notifications.
-											</p>
-											<BrutalButton
-												type="button"
-												onClick={() => setPhoneInfoOpen(false)}
-												color="var(--primary)"
-												textColor="var(--foreground)"
-												borderColor="var(--foreground)"
-												className="mt-4 w-full py-2 text-xs uppercase tracking-wider"
-											>
-												Got it
-											</BrutalButton>
-										</div>
-									</motion.div>
-								)}
-							</AnimatePresence>
-						</div>
-					)}
+											type="button"
+											aria-pressed={usingExistingImage}
+											onClick={() => {
+												setUsingExistingImage(true);
+												setSelectedAvatar(null);
+												setCustomImage(null);
+												setPreviewing(false);
+											}}
+											className={cn(
+												"flex items-center gap-3 rounded-xl border-2 p-2 pr-3 text-left transition-all duration-150",
+												usingExistingImage
+													? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
+													: "border-border hover:border-accent"
+											)}
+										>
+											<Image
+												src={existingImage}
+												alt="Your current profile picture"
+												width={40}
+												height={40}
+												className="size-10 shrink-0 rounded-full object-cover"
+											/>
+											<span className="text-xs leading-snug">Use my current photo</span>
+										</button>
+										<button
+											type="button"
+											aria-pressed={!usingExistingImage}
+											onClick={() => {
+												setUsingExistingImage(false);
+												setCustomImage(null);
+												setPreviewing(false);
+											}}
+											className={cn(
+												"flex items-center justify-center rounded-xl border-2 p-2 text-xs transition-all duration-150",
+												!usingExistingImage
+													? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
+													: "border-border hover:border-accent"
+											)}
+										>
+											Choose a new one
+										</button>
+									</div>
+								</div>
+							)}
 
-					{step === 2 && (
-						<div>
-							<label htmlFor="gender" className="mb-2 block text-sm ">
-								Gender
+							<label htmlFor="role" className="mb-2 block text-sm ">
+								Role
 							</label>
 							<DropdownMenu>
 								<DropdownMenuTrigger
-									id="gender"
+									id="role"
 									className={cn(
 										"retro h-12 w-full rounded-none border-2 border-foreground bg-popover px-4 text-left text-xs outline-none transition-all dark:border-ring",
 										"focus-visible:border-accent focus-visible:shadow-[3px_3px_0px_var(--accent)] data-popup-open:border-accent data-popup-open:shadow-[3px_3px_0px_var(--accent)]",
-										gender ? "" : "text-muted-foreground"
+										role ? "" : "text-muted-foreground"
 									)}
 								>
-									{gender === "male" ? "Male" : gender === "female" ? "Female" : "Select your gender"}
+									{role || "Select your role"}
 								</DropdownMenuTrigger>
-								<DropdownMenuContent aria-label="Gender options">
-									<DropdownMenuItem
-										className={cn(gender === "male" && "text-accent")}
-										onClick={() => handleGenderChange("male")}
-									>
-										Male
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										className={cn(gender === "female" && "text-accent")}
-										onClick={() => handleGenderChange("female")}
-									>
-										Female
-									</DropdownMenuItem>
+								<DropdownMenuContent aria-label="Role options">
+									{ROLES.map((r) => (
+										<DropdownMenuItem
+											key={r}
+											className={cn(role === r && "text-accent")}
+											onClick={() => handleRoleChange(r)}
+										>
+											{r}
+										</DropdownMenuItem>
+									))}
 								</DropdownMenuContent>
 							</DropdownMenu>
 
 							<AnimatePresence mode="wait" initial={false}>
-								{gender && (
+								{role && !usingExistingImage && (
 									<motion.div
-										key={gender}
+										key={role}
 										initial={{ opacity: 0, y: 12 }}
 										animate={{ opacity: 1, y: 0 }}
 										exit={{ opacity: 0, y: -8 }}
 										transition={{ duration: 0.25, ease: "easeOut" }}
-										className="mt-6 grid grid-cols-4 gap-3 sm:grid-cols-5"
-										role="group"
-										aria-label={`Choose an avatar (${gender})`}
+										className="mt-6"
 									>
-										{avatars.map((avatar, index) => {
-											const selected = selectedAvatar?.src === avatar.src;
-											return (
-												<button
-													key={avatar.src}
-													type="button"
-													aria-label={`Avatar ${index + 1}`}
-													aria-pressed={selected}
-													onClick={() => setSelectedAvatar(avatar)}
-													className={cn(
-														"aspect-square overflow-hidden rounded-full border-2 transition-all duration-150 hover:scale-105",
-														selected
-															? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
-															: "border-border hover:border-accent"
-													)}
-												>
+										<div className="mb-2 flex items-center justify-between">
+											<p className="text-xs text-muted-foreground">Pick a character</p>
+											<button
+												type="button"
+												onClick={() => fileInputRef.current?.click()}
+												className="text-xs text-accent underline transition-colors hover:text-foreground"
+											>
+												Upload your own
+											</button>
+											<input
+												ref={fileInputRef}
+												type="file"
+												accept="image/*"
+												className="hidden"
+												onChange={handleImageUpload}
+											/>
+										</div>
+
+										{customImage ? (
+											<div className="flex items-center justify-between rounded-xl border-2 border-primary p-2 pl-3 shadow-[3px_3px_0px_var(--primary)]">
+												<div className="flex items-center gap-3">
 													<Image
-														src={avatar}
-														alt=""
-														className="size-full object-cover"
+														src={customImage}
+														alt="Your uploaded picture"
+														width={40}
+														height={40}
+														className="size-10 shrink-0 rounded-full object-cover"
 													/>
+													<span className="text-xs">Your image</span>
+												</div>
+												<button
+													type="button"
+													onClick={() => setCustomImage(null)}
+													className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
+												>
+													Remove
 												</button>
-											);
-										})}
+											</div>
+										) : (
+											<div
+												className="grid grid-cols-4 gap-3 sm:grid-cols-5"
+												role="group"
+												aria-label="Choose an avatar"
+											>
+												{CHARACTERS.map((character, index) => {
+													const selected = selectedAvatar === character;
+													return (
+														<button
+															key={character}
+															type="button"
+															aria-label={`Avatar ${index + 1}`}
+															aria-pressed={selected}
+															onClick={() => {
+																setSelectedAvatar(character);
+																setCustomImage(null);
+															}}
+															className={cn(
+																"aspect-square overflow-hidden rounded-full border-2 transition-all duration-150 hover:scale-105",
+																selected
+																	? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
+																	: "border-border hover:border-accent"
+															)}
+														>
+															<Image
+																src={character}
+																alt=""
+																width={100}
+																height={100}
+																className="size-full object-cover"
+															/>
+														</button>
+													);
+												})}
+											</div>
+										)}
 									</motion.div>
 								)}
 							</AnimatePresence>
@@ -376,7 +433,7 @@ export default function OnboardingWizard() {
 								<BrutalButton
 									type="button"
 									onClick={() => setPreviewing((open) => !open)}
-									disabled={!selectedAvatar}
+									disabled={!finalImage}
 									color="var(--muted)"
 									textColor="var(--foreground)"
 									borderColor="var(--border)"
@@ -388,7 +445,7 @@ export default function OnboardingWizard() {
 							</div>
 
 							<AnimatePresence initial={false}>
-								{previewing && selectedAvatar && (
+								{previewing && finalImage && (
 									<motion.div
 										initial={{ opacity: 0, y: 12, scale: 0.96 }}
 										animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -397,11 +454,31 @@ export default function OnboardingWizard() {
 										className="mt-4 border-2 border-foreground bg-popover p-4 dark:border-ring"
 									>
 										<div className="flex items-center gap-4">
-											<Image
-												src={selectedAvatar}
-												alt="Preview of your chosen avatar"
-												className="size-35 shrink-0 rounded-full object-cover"
-											/>
+											{usingExistingImage ? (
+												<Image
+													src={finalImage}
+													alt="Preview of your current profile picture"
+													width={140}
+													height={140}
+													className="size-35 shrink-0 rounded-full object-cover"
+												/>
+											) : customImage ? (
+												<Image
+													src={customImage}
+													alt="Preview of your uploaded image"
+													width={140}
+													height={140}
+													className="size-35 shrink-0 rounded-full object-cover"
+												/>
+											) : (
+												<Image
+													src={selectedAvatar!}
+													alt="Preview of your chosen avatar"
+													width={140}
+													height={140}
+													className="size-35 shrink-0 rounded-full object-cover"
+												/>
+											)}
 											<div className="retro truncate text-sm  min-w-0">
 												{username.trim()}
 											</div>
@@ -412,7 +489,7 @@ export default function OnboardingWizard() {
 						</div>
 					)}
 
-					{step === 3 && (
+					{step === 2 && (
 						<div>
 							<div
 								className="grid grid-cols-4 gap-3 sm:grid-cols-6"
@@ -420,10 +497,10 @@ export default function OnboardingWizard() {
 								aria-label="Choose a badge"
 							>
 								{BADGES.map((badge, index) => {
-									const selected = selectedBadge?.src === badge.src;
+									const selected = selectedBadge === badge;
 									return (
 										<button
-											key={badge.src}
+											key={badge}
 											type="button"
 											aria-label={`Badge ${index + 1}`}
 											aria-pressed={selected}
@@ -438,6 +515,8 @@ export default function OnboardingWizard() {
 											<Image
 												src={badge}
 												alt=""
+												width={100}
+												height={100}
 												className="size-full object-cover"
 											/>
 										</button>
@@ -457,6 +536,8 @@ export default function OnboardingWizard() {
 										<Image
 											src={selectedBadge}
 											alt="Your chosen badge"
+											width={48}
+											height={48}
 											className="size-12 shrink-0 rounded-lg object-cover"
 										/>
 										<p className="text-sm leading-relaxed">
@@ -497,21 +578,27 @@ export default function OnboardingWizard() {
 			<BrutalButton
 				type="button"
 				onClick={step === STEPS.length - 1 ? handleFinish : goNext}
-				disabled={!canProceed || saving}
+				disabled={!canProceed || saving || checkingUsername}
 				color="var(--primary)"
 				textColor="var(--foreground)"
 				borderColor="var(--foreground)"
 				className="gap-2 px-5 py-2 uppercase tracking-wider text-sm! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 			>
-				{step === STEPS.length - 1 ? (saving ? "Saving..." : "Finish") : "Continue"}
-				{step !== STEPS.length - 1 && <Image src={arrowIcon} alt="Next" width={20} height={20} />}
+				{step === STEPS.length - 1
+					? saving
+						? "Saving..."
+						: "Finish"
+					: checkingUsername
+						? "Checking..."
+						: "Continue"}
+				{step !== STEPS.length - 1 && !checkingUsername && <Image src={arrowIcon} alt="Next" width={20} height={20} />}
 			</BrutalButton>
 		</div>
 
 		<div className="mt-4 text-center">
 			<button
 				type="button"
-				onClick={() => router.push("/")}
+				onClick={handleSkip}
 				className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
 			>
 				Skip onboarding for now
