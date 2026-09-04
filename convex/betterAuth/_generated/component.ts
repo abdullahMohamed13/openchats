@@ -36,11 +36,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt: number;
                   email: string;
                   emailVerified: boolean;
-                  gender?: null | string;
                   image?: null | string;
                   name: string;
+                  onboarded?: null | boolean;
                   phone?: null | string;
                   phoneVerified?: null | boolean;
+                  role?: null | string;
                   updatedAt: number;
                   userId?: null | string;
                   username?: null | string;
@@ -122,8 +123,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phone"
                     | "phoneVerified"
                     | "badge"
-                    | "gender"
+                    | "role"
                     | "username"
+                    | "onboarded"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -321,8 +323,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phone"
                     | "phoneVerified"
                     | "badge"
-                    | "gender"
+                    | "role"
                     | "username"
+                    | "onboarded"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -575,11 +578,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt?: number;
                   email?: string;
                   emailVerified?: boolean;
-                  gender?: null | string;
                   image?: null | string;
                   name?: string;
+                  onboarded?: null | boolean;
                   phone?: null | string;
                   phoneVerified?: null | boolean;
+                  role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
                   username?: null | string;
@@ -598,8 +602,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phone"
                     | "phoneVerified"
                     | "badge"
-                    | "gender"
+                    | "role"
                     | "username"
+                    | "onboarded"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -825,11 +830,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt?: number;
                   email?: string;
                   emailVerified?: boolean;
-                  gender?: null | string;
                   image?: null | string;
                   name?: string;
+                  onboarded?: null | boolean;
                   phone?: null | string;
                   phoneVerified?: null | boolean;
+                  role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
                   username?: null | string;
@@ -848,8 +854,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "phone"
                     | "phoneVerified"
                     | "badge"
-                    | "gender"
+                    | "role"
                     | "username"
+                    | "onboarded"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
