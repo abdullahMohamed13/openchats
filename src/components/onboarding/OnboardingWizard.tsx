@@ -1,13 +1,20 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+// utils
 import { cn } from "@/lib/utils";
-import { DURATION_FAST } from "@/lib/motion";
-import { User } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
+import { claimUsername } from "@/lib/claim-username";
+import { checkUsername } from "@/lib/is-username-taken";
+import type { UsernameAvailability } from "@/lib/is-username-taken";
+// Data
+import { DURATION_FAST } from "@/lib/motion";
+import { CHARACTERS } from "../../data/characters";
+import { BADGES } from "../../data/badges";
+// Components
 import BrutalButton from "@/components/ui/brutal-button";
 import { Progress } from "@/components/ui/8bit/progress";
 import { Input } from "@/components/ui/8bit/input";
@@ -17,11 +24,9 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/8bit/dropdown-menu";
+// Icons
+import { User } from "pixelarticons/react";
 import arrowIcon from "@/assets/icons/arrow.webp";
-import { resolveEmailByUsername } from "@/lib/resolveEmailByUsername";
-
-import { CHARACTERS } from "../../data/characters";
-import { BADGES } from "../../data/badges";
 
 const ROLES = [
 	"Team lead",
@@ -59,34 +64,44 @@ export default function OnboardingWizard() {
 
 	const [step, setStep] = useState(0);
 	const [username, setUsername] = useState<string>(() => slugifyName(session?.user.name));
+	const [usernameStatus, setUsernameStatus] = useState<UsernameAvailability | "checking" | "idle">(
+		() => (USERNAME_PATTERN.test(slugifyName(session?.user.name)) ? "checking" : "idle")
+	);
 	const [role, setRole] = useState<Role | "">("");
 	const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 	const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
 	const [previewing, setPreviewing] = useState(false);
-	const [usingExistingImage, setUsingExistingImage] = useState(false);
-	const [customImage, setCustomImage] = useState<string | null>(null);
-	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const [saving, setSaving] = useState(false);
 	const [checkingUsername, setCheckingUsername] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const existingImage = session?.user.image ?? null;
-	const finalImage = usingExistingImage
-		? existingImage
-		: customImage ?? selectedAvatar ?? null;
+	const usernameValid = USERNAME_PATTERN.test(username.trim());
+
+	useEffect(() => {
+		if (!usernameValid) return;
+		let cancelled = false;
+		const timer = setTimeout(async () => {
+			const availability = await checkUsername(username.trim(), session?.user.id ?? "");
+			if (!cancelled) setUsernameStatus(availability);
+		}, 350);
+		return () => {
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	}, [usernameValid, username, session?.user.id]);
 
 	const canProceed =
 		step === 0
-			? USERNAME_PATTERN.test(username.trim())
+			? usernameValid && usernameStatus === "available"
 			: step === 1
-				? role !== "" && (usingExistingImage || customImage !== null || selectedAvatar !== null)
+				? role !== "" && selectedAvatar !== null
 				: selectedBadge !== null;
 
 	const progressValue = Math.round(
 		([
-			USERNAME_PATTERN.test(username.trim()),
-			role !== "" && (usingExistingImage || customImage !== null || selectedAvatar !== null),
+			usernameValid,
+			role !== "" && selectedAvatar !== null,
 			selectedBadge !== null,
 		].filter(Boolean).length /
 			STEPS.length) *
@@ -98,48 +113,24 @@ export default function OnboardingWizard() {
 		setPreviewing(false);
 	};
 
-	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		e.target.value = "";
-		if (!file) return;
-
-		if (!file.type.startsWith("image/")) {
-			setError("Please choose an image file.");
-			return;
-		}
-
-		const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
-		if (file.size > MAX_IMAGE_SIZE) {
-			setError("Image is too large. Please choose a file under 3MB.");
-			return;
-		}
-
-		const reader = new FileReader();
-		reader.onload = () => {
-			if (typeof reader.result === "string") {
-				setCustomImage(reader.result);
-				setSelectedAvatar(null);
-				setUsingExistingImage(false);
-				setPreviewing(false);
-				setError(null);
-			}
-		};
-		reader.readAsDataURL(file);
-	};
-
 	const goNext = async () => {
 		if (!canProceed || checkingUsername) return;
 		setError(null);
 
 		if (step === 0) {
-			setCheckingUsername(true);
-			const email = await resolveEmailByUsername(username.trim());
-			setCheckingUsername(false);
-
-			if (email && email !== session?.user.email) {
-				setError("This username is already taken. Try another one.");
+			if (!session?.user.id) {
+				setError("Session expired. Please sign in again.");
 				return;
 			}
+			setCheckingUsername(true);
+			const claim = await claimUsername(username.trim(), session.user.id);
+			setCheckingUsername(false);
+
+			if (!claim.ok) {
+				setUsernameStatus(claim.reason);
+				return;
+			}
+			setUsernameStatus("available");
 		}
 
 		setStep((current) => Math.min(current + 1, STEPS.length - 1));
@@ -151,21 +142,28 @@ export default function OnboardingWizard() {
 	};
 
 	const handleFinish = async () => {
-		if (!finalImage || !selectedBadge || saving) return;
+		if (!selectedAvatar || !selectedBadge || saving) return;
 		setSaving(true);
 		setError(null);
 
-		const email = await resolveEmailByUsername(username.trim());
-		if (email && email !== session?.user.email) {
+		if (!session?.user.id) {
+			setError("Session expired. Please sign in again.");
+			setSaving(false);
+			return;
+		}
+
+		const claim = await claimUsername(username.trim(), session.user.id);
+		if (!claim.ok) {
 			setError("This username is already taken. Try another one.");
 			setSaving(false);
+			setStep(0);
 			return;
 		}
 
 		const { error: updateError } = await authClient.updateUser({
 			name: username.trim(),
 			username: username.trim(),
-			image: finalImage,
+			image: selectedAvatar,
 			role,
 			badge: selectedBadge,
 			onboarded: true,
@@ -247,7 +245,14 @@ export default function OnboardingWizard() {
 									id="username"
 									type="text"
 									value={username}
-									onChange={(e) => setUsername(e.target.value.toLowerCase())}
+									onChange={(e) => {
+										const value = e.target.value.toLowerCase();
+										setUsername(value);
+										setUsernameStatus(
+											USERNAME_PATTERN.test(value.trim()) ? "checking" : "idle"
+										);
+										setError(null);
+									}}
 									placeholder="e.g. hysm_67"
 									autoComplete="off"
 									spellCheck={false}
@@ -255,64 +260,24 @@ export default function OnboardingWizard() {
 									className="h-12 pl-9 "
 								/>
 							</div>
-							<p className="mt-2 text-xs text-muted-foreground">
-								3–20 characters. Small letters only, numbers, dots and underscores.
-							</p>
+								<p className="mt-2 text-xs text-muted-foreground">
+									3-20 characters. Small letters only, numbers, dots and underscores.
+								</p>
+								{usernameStatus === "taken" && (
+									<p role="alert" className="mt-2 text-xs text-danger">
+										This username is already taken.
+									</p>
+								)}
+								{usernameStatus === "unavailable" && (
+									<p role="alert" className="mt-2 text-xs text-danger">
+										Could not check this username. Try again.
+									</p>
+								)}
 						</div>
 					)}
 
 					{step === 1 && (
 						<div>
-							{existingImage && (
-								<div className="mb-4">
-									<p className="mb-2 text-xs text-muted-foreground">Profile picture</p>
-									<div className="grid grid-cols-2 gap-3">
-										<button
-											type="button"
-											aria-pressed={usingExistingImage}
-											onClick={() => {
-												setUsingExistingImage(true);
-												setSelectedAvatar(null);
-												setCustomImage(null);
-												setPreviewing(false);
-											}}
-											className={cn(
-												"flex items-center gap-3 rounded-xl border-2 p-2 pr-3 text-left transition-all duration-150",
-												usingExistingImage
-													? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
-													: "border-border hover:border-accent"
-											)}
-										>
-											<Image
-												src={existingImage}
-												alt="Your current profile picture"
-												width={40}
-												height={40}
-												className="size-10 shrink-0 rounded-full object-cover"
-											/>
-											<span className="text-xs leading-snug">Use my current photo</span>
-										</button>
-										<button
-											type="button"
-											aria-pressed={!usingExistingImage}
-											onClick={() => {
-												setUsingExistingImage(false);
-												setCustomImage(null);
-												setPreviewing(false);
-											}}
-											className={cn(
-												"flex items-center justify-center rounded-xl border-2 p-2 text-xs transition-all duration-150",
-												!usingExistingImage
-													? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
-													: "border-border hover:border-accent"
-											)}
-										>
-											Choose a new one
-										</button>
-									</div>
-								</div>
-							)}
-
 							<label htmlFor="role" className="mb-2 block text-sm ">
 								Role
 							</label>
@@ -341,7 +306,7 @@ export default function OnboardingWizard() {
 							</DropdownMenu>
 
 							<AnimatePresence mode="wait" initial={false}>
-								{role && !usingExistingImage && (
+								{role && (
 									<motion.div
 										key={role}
 										initial={{ opacity: 0, y: 12 }}
@@ -350,81 +315,40 @@ export default function OnboardingWizard() {
 										transition={{ duration: 0.25, ease: "easeOut" }}
 										className="mt-6"
 									>
-										<div className="mb-2 flex items-center justify-between">
-											<p className="text-xs text-muted-foreground">Pick a character</p>
-											<button
-												type="button"
-												onClick={() => fileInputRef.current?.click()}
-												className="text-xs text-accent underline transition-colors hover:text-foreground"
-											>
-												Upload your own
-											</button>
-											<input
-												ref={fileInputRef}
-												type="file"
-												accept="image/*"
-												className="hidden"
-												onChange={handleImageUpload}
-											/>
-										</div>
+										<p className="mb-2 text-xs text-muted-foreground">Pick a character</p>
 
-										{customImage ? (
-											<div className="flex items-center justify-between rounded-xl border-2 border-primary p-2 pl-3 shadow-[3px_3px_0px_var(--primary)]">
-												<div className="flex items-center gap-3">
-													<Image
-														src={customImage}
-														alt="Your uploaded picture"
-														width={40}
-														height={40}
-														className="size-10 shrink-0 rounded-full object-cover"
-													/>
-													<span className="text-xs">Your image</span>
-												</div>
-												<button
-													type="button"
-													onClick={() => setCustomImage(null)}
-													className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
-												>
-													Remove
-												</button>
-											</div>
-										) : (
-											<div
-												className="grid grid-cols-4 gap-3 sm:grid-cols-5"
-												role="group"
-												aria-label="Choose an avatar"
-											>
-												{CHARACTERS.map((character, index) => {
-													const selected = selectedAvatar === character;
-													return (
-														<button
-															key={character}
-															type="button"
-															aria-label={`Avatar ${index + 1}`}
-															aria-pressed={selected}
-															onClick={() => {
-																setSelectedAvatar(character);
-																setCustomImage(null);
-															}}
-															className={cn(
-																"aspect-square overflow-hidden rounded-full border-2 transition-all duration-150 hover:scale-105",
-																selected
-																	? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
-																	: "border-border hover:border-accent"
-															)}
-														>
-															<Image
-																src={character}
-																alt=""
-																width={100}
-																height={100}
-																className="size-full object-cover"
-															/>
-														</button>
-													);
-												})}
-											</div>
-										)}
+										<div
+											className="grid grid-cols-4 gap-3 sm:grid-cols-5"
+											role="group"
+											aria-label="Choose an avatar"
+										>
+											{CHARACTERS.map((character, index) => {
+												const selected = selectedAvatar === character;
+												return (
+													<button
+														key={character}
+														type="button"
+														aria-label={`Avatar ${index + 1}`}
+														aria-pressed={selected}
+														onClick={() => setSelectedAvatar(character)}
+														className={cn(
+															"aspect-square overflow-hidden rounded-full border-2 transition-all duration-150 hover:scale-105",
+															selected
+																? "scale-105 border-primary shadow-[3px_3px_0px_var(--primary)]"
+																: "border-border hover:border-accent"
+														)}
+													>
+														<Image
+															src={character}
+															alt=""
+															width={100}
+															height={100}
+															className="size-full object-cover"
+														/>
+													</button>
+												);
+											})}
+										</div>
 									</motion.div>
 								)}
 							</AnimatePresence>
@@ -433,7 +357,7 @@ export default function OnboardingWizard() {
 								<BrutalButton
 									type="button"
 									onClick={() => setPreviewing((open) => !open)}
-									disabled={!finalImage}
+									disabled={!selectedAvatar}
 									color="var(--muted)"
 									textColor="var(--foreground)"
 									borderColor="var(--border)"
@@ -445,7 +369,7 @@ export default function OnboardingWizard() {
 							</div>
 
 							<AnimatePresence initial={false}>
-								{previewing && finalImage && (
+								{previewing && selectedAvatar && (
 									<motion.div
 										initial={{ opacity: 0, y: 12, scale: 0.96 }}
 										animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -454,31 +378,13 @@ export default function OnboardingWizard() {
 										className="mt-4 border-2 border-foreground bg-popover p-4 dark:border-ring"
 									>
 										<div className="flex items-center gap-4">
-											{usingExistingImage ? (
-												<Image
-													src={finalImage}
-													alt="Preview of your current profile picture"
-													width={140}
-													height={140}
-													className="size-35 shrink-0 rounded-full object-cover"
-												/>
-											) : customImage ? (
-												<Image
-													src={customImage}
-													alt="Preview of your uploaded image"
-													width={140}
-													height={140}
-													className="size-35 shrink-0 rounded-full object-cover"
-												/>
-											) : (
-												<Image
-													src={selectedAvatar!}
-													alt="Preview of your chosen avatar"
-													width={140}
-													height={140}
-													className="size-35 shrink-0 rounded-full object-cover"
-												/>
-											)}
+											<Image
+												src={selectedAvatar}
+												alt="Preview of your chosen avatar"
+												width={140}
+												height={140}
+												className="size-35 shrink-0 rounded-full object-cover"
+											/>
 											<div className="retro truncate text-sm  min-w-0">
 												{username.trim()}
 											</div>
