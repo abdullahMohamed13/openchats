@@ -10,7 +10,9 @@
 
 import type * as auth from "../auth.js";
 import type * as auth_queries from "../auth_queries.js";
+import type * as email from "../email.js";
 import type * as http from "../http.js";
+import type * as username from "../username.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +23,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   auth_queries: typeof auth_queries;
+  email: typeof email;
   http: typeof http;
+  username: typeof username;
 }>;
 
 /**
