@@ -5,6 +5,7 @@ import { DataModel } from "./_generated/dataModel";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import { sendPasswordResetEmail, toSiteUrl } from "./email";
 
 const siteUrl = process.env.SITE_URL!;
 
@@ -32,10 +33,23 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
 		baseURL: dynamicBaseURL,
 		database: authComponent.adapter(ctx),
-		trustedOrigins: ["http://localhost:3000"],
+		trustedOrigins: [
+			siteUrl,
+			"http://localhost:3000",
+			"http://localhost:4173",
+			"http://127.0.0.1:3000",
+		].filter(Boolean) as string[],
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: false,
+			revokeSessionsOnPasswordReset: true,
+			sendResetPassword: async ({ user, url }) => {
+				await sendPasswordResetEmail({
+					to: user.email,
+					name: user.name,
+					url: toSiteUrl(url),
+				});
+			},
 		},
 		socialProviders: {
 			github: {

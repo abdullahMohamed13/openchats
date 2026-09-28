@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AuthSwitch from "@/components/ui/auth-switch";
+import AuthSwitch from "@/components/auth/auth-switch";
 
 export const metadata: Metadata = {
 	title: "Sign Up",

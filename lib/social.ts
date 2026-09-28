@@ -1,7 +1,7 @@
 import { authClient } from "./auth-client"
 import { toast } from "@/components/ui/8bit/toast"
-import type { ErrorContext } from "better-auth/react"
-import type { SocialProviders } from "@/types/auth"
+import { friendlyAuthError } from "./auth-validation"
+import type { AuthSetLoading, SocialProviders } from "@/types/auth"
 
 type SocialProps = SocialProviders & {
 	callbackURL: "/dashboard" | "/onboarding"
@@ -10,17 +10,20 @@ type SocialProps = SocialProviders & {
 export const handleSocialLogin = async ({
 	provider,
 	callbackURL,
-}: SocialProps) => {
-	return authClient.signIn.social(
-		{
-			provider,
-			callbackURL,
-			newUserCallbackURL: "/onboarding",
-		},
-		{
-			onError: (ctx: ErrorContext) => {
-				toast(ctx.error.message ?? "Login failed")
-			},
-		}
-	)
+	setLoading,
+}: SocialProps & AuthSetLoading) => {
+	setLoading?.(true)
+
+	const { error } = await authClient.signIn.social({
+		provider,
+		callbackURL,
+		newUserCallbackURL: "/onboarding",
+	})
+
+	// Success navigates away to the provider, so the loading state stays on to
+	// stop the button flickering back to idle during the redirect.
+	if (error) {
+		setLoading?.(false)
+		toast(friendlyAuthError(error.message) ?? "Login failed")
+	}
 }
