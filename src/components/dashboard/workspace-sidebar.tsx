@@ -1,7 +1,11 @@
+"use client";
+
 import { useState } from "react";
 import Image from "next/image";
-import { Plus, Settings2, MoreVertical } from "pixelarticons/react";
+import { useRouter } from "next/navigation";
+import { Flag, Plus, Settings2, MoreVertical } from "pixelarticons/react";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 import { SignOutButton } from "./sign-out-button";
 import type { MockWorkspace } from "@/data/dashboard/workspaces";
 import type { MockUser } from "@/data/dashboard/users";
@@ -20,6 +24,10 @@ export function WorkspaceSidebar({
   onSelectWorkspace,
 }: WorkspaceSidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+
+  const needsOnboarding = !isPending && !!session && session.user.onboarded !== true;
 
   return (
     <aside className="hidden w-16 shrink-0 flex-col items-center gap-4 border-r border-border bg-muted py-4 lg:flex">
@@ -65,6 +73,22 @@ export function WorkspaceSidebar({
       </div>
 
       <div className="relative mt-auto flex flex-col items-center gap-3">
+        {needsOnboarding && (
+          <button
+            type="button"
+            onClick={() => router.push("/onboarding")}
+            aria-label="Finish your setup"
+            title="Finish your setup"
+            className="relative flex size-9 items-center justify-center rounded-lg border border-dashed border-primary text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            <Flag width={18} height={18} />
+            <span
+              className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border border-muted bg-accent"
+              aria-hidden
+            />
+          </button>
+        )}
+
         <button
           type="button"
           aria-label="Settings"
