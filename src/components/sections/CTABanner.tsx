@@ -12,7 +12,7 @@ export default function CTABannerSection() {
 				{
 					"--cta-overlay": "color-mix(in srgb, var(--background) 94%, transparent)",
 					backgroundImage:
-						"linear-gradient(var(--cta-overlay), var(--cta-overlay)), url('/hero-background.webp')",
+						"linear-gradient(var(--cta-overlay), var(--cta-overlay)), url('/images/backgrounds/hero-background.webp')",
 					backgroundSize: "cover",
 					backgroundPosition: "center",
 				} as React.CSSProperties
