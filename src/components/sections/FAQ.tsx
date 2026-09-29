@@ -13,7 +13,7 @@ import { FAQS } from "@/data/faqs"
 
 export default function FAQSection() {
   return (
-		<section className="section-padding w-full gap-8">
+		<section id="faq" className="section-padding w-full gap-8 scroll-mt-14">
       
       <SectionHeader label="FAQ" title="Frequently Asked Questions" />
       

@@ -10,7 +10,7 @@ export default function NotFound() {
 	return (
 		<section className="min-h-screen flex-col-center gap-4 px-6 text-center"
 			style={{
-				backgroundImage: "url('/not-found.webp')",
+				backgroundImage: "url('/images/backgrounds/not-found.webp')",
 				backgroundSize: "cover",
 				backgroundPosition: "center",
 			}}

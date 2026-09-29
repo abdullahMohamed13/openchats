@@ -21,10 +21,21 @@ type SocialProviders = {
 	provider: "github" | "google"
 }
 
+type SocialProvider = SocialProviders["provider"]
+
 type UsernameSignInProps = AuthSetLoading & {
 	username: string;
 	password: string;
 	callbackURL: "/dashboard";
 };
 
-export type { SocialProviders, AuthSetLoading, SignInProps, SignUpProps, UsernameSignInProps }
+type ForgotPasswordProps = AuthSetLoading & {
+	email: string;
+};
+
+type ResetPasswordProps = AuthSetLoading & {
+	newPassword: string;
+	token?: string;
+};
+
+export type { SocialProvider, SocialProviders, AuthSetLoading, SignInProps, SignUpProps, UsernameSignInProps, ForgotPasswordProps, ResetPasswordProps }

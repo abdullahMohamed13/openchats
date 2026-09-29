@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Footer() {
 	return <footer className="bg-[#131114] flex justify-between flex-col md:flex-row section-padding py-6!">
-		<Link href="/" className="text-primary font-press-start flex items-center gap-2">
+		<Link href="/" className="text-primary font-press-start flex items-center justify-center md:justify-start gap-2">
 			<Image src="/logo-alt.webp" width={60} height={60} alt="Logo" loading="lazy" />
 			openchats
 		</Link>
