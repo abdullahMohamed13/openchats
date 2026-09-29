@@ -99,6 +99,7 @@ export function DashboardShell() {
         workspaces={MOCK_WORKSPACES}
         activeWorkspaceId={activeWorkspaceId}
         onSelectWorkspace={handleSelectWorkspace}
+        currentUserBadge={currentUser.badge}
         channels={workspace}
         dms={dms}
         users={MOCK_USERS}

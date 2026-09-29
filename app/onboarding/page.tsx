@@ -12,7 +12,7 @@ export default function OnboardingPage() {
 		<main
 			className="flex-col-center relative min-h-svh w-full px-4 py-8"
 			style={{
-				backgroundImage: "url('/mill-and-flying-saucer.webp')",
+				backgroundImage: "url('/images/backgrounds/mill-and-flying-saucer.webp')",
 				backgroundSize: "cover",
 				backgroundPosition: "left",
 			}}

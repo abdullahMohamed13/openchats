@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronDown, Close, Search } from "pixelarticons/react";
+import { ChevronDown, Close, Plus, Search } from "pixelarticons/react";
 import { cn } from "@/lib/utils";
+import "@/styles/retro.css";
 import { ChannelItem } from "./channel-item";
 import { DMItem } from "./dm-item";
 import type { ConversationKey } from "@/data/dashboard/messages";
@@ -17,6 +18,7 @@ interface NavSidebarProps {
   workspaces?: MockWorkspace[];
   activeWorkspaceId?: string;
   onSelectWorkspace?: (id: string) => void;
+  currentUserBadge?: string;
   channels: MockChannel[];
   dms: MockDM[];
   users: MockUser[];
@@ -35,6 +37,7 @@ export function NavSidebar({
   workspaces,
   activeWorkspaceId,
   onSelectWorkspace,
+  currentUserBadge,
   channels,
   dms,
   users,
@@ -46,6 +49,7 @@ export function NavSidebar({
   const [channelsOpen, setChannelsOpen] = useState(true);
   const [dmsOpen, setDmsOpen] = useState(true);
   const [query, setQuery] = useState("");
+  const [badgeBroken, setBadgeBroken] = useState(false);
 
   const normalized = query.trim().toLowerCase();
   const filteredChannels = normalized
@@ -149,14 +153,24 @@ export function NavSidebar({
             open={dmsOpen}
             onToggle={() => setDmsOpen((open) => !open)}
             action={
-              <Image
-                src={"/images/badges/knight-shield.webp"}
-                alt="New direct message"
-                width={12}
-                height={12}
-                title="Start a new direct message"
-                className="cursor-pointer hover:opacity-80"
-              />
+              badgeBroken ? (
+                <Plus
+                  width={12}
+                  height={12}
+                  aria-label="Start a new direct message"
+                  className="cursor-pointer hover:opacity-80"
+                />
+              ) : (
+                <Image
+                  src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
+                  alt="New direct message"
+                  width={12}
+                  height={12}
+                  title="Start a new direct message"
+                  onError={() => setBadgeBroken(true)}
+                  className="pixelated cursor-pointer hover:opacity-80"
+                />
+              )
             }
           />
           {dmsOpen &&

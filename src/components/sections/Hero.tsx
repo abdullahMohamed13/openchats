@@ -5,14 +5,16 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
-import Lenis from "lenis";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
 import { DURATION_SLOW } from "@/lib/motion";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { authClient } from "@/lib/auth-client";
 import BrutalButton from "../ui/brutal-button";
 
 export default function HeroSection() {
 	const parallaxRef = useRef<HTMLDivElement>(null);
+	const { data: session, isPending } = authClient.useSession();
+	const isSignedIn = !isPending && !!session;
 
 	useEffect(() => {
 		gsap.registerPlugin(ScrollTrigger);
@@ -46,17 +48,9 @@ export default function HeroSection() {
 			});
 		}
 
-		const lenis = new Lenis();
-		lenis.on("scroll", ScrollTrigger.update);
-		gsap.ticker.add((time) => {
-			lenis.raf(time * 1000);
-		});
-		gsap.ticker.lagSmoothing(0);
-
 		return () => {
 			ScrollTrigger.getAll().forEach((st) => st.kill());
 			if (triggerElement) gsap.killTweensOf(triggerElement);
-			lenis.destroy();
 		};
 	}, []);
 
@@ -67,7 +61,7 @@ export default function HeroSection() {
 					<div className="parallax__black-line-overflow" />
 					<div data-parallax-layers className="parallax__layers">
 						<Image
-							src="/hero-background.webp"
+							src="/images/backgrounds/hero-background.webp"
 							alt="Background Image"
 							loading="eager"
 							width={1920}
@@ -98,19 +92,21 @@ export default function HeroSection() {
 								<h1 className="font-brogetta font-bold text-6xl! md:text-7xl lg:text-8xl! -mt-4">
 									OpenChats
 								</h1>
-								<h3 className="capitalize mt-3 md:[&_span]:italic">
-									<span>Your team</span> |
-									<span>Your conversations</span> |
-									<span>One place</span>
-								</h3>
+							<h3 className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 capitalize mt-3 md:[&_span]:italic">
+								<span>Your team</span>
+								<span aria-hidden className="text-accent select-none">·</span>
+								<span>Your conversations</span>
+								<span aria-hidden className="text-accent select-none">·</span>
+								<span>One place</span>
+							</h3>
 							</div>
 							<p className="max-w-md text-sm md:text-base text-foreground/80">
 								Bring your teams, workspaces, channels, and direct conversations together in one place.
 							</p>
 							
-							<Link href="/signup">
-								<BrutalButton className="mt-2">Get Started</BrutalButton>
-							</Link>
+						<Link href={isSignedIn ? "/dashboard" : "/signup"}>
+							<BrutalButton className="mt-2">{isSignedIn ? "Go to Dashboard" : "Get Started"}</BrutalButton>
+						</Link>
 							
 						</motion.div>
 						</div>

@@ -10,10 +10,11 @@ import { FEATURES, firstTestimonial, secondTestimonial } from "@/data/features";
 export default function Features() {
 	return (
 		<section
-			className="min-h-screen flex-col-center border-y-3 md:border-y-6 border-secondary overflow-x-clip"
+			id="features"
+			className="min-h-screen flex-col-center border-y-3 md:border-y-6 border-secondary overflow-x-clip scroll-mt-14"
 			style={{
 				background:
-					"linear-gradient(rgba(18, 98, 58, 0.87), rgba(18, 98, 58, 0.95)), url('/features-image.webp')",
+					"linear-gradient(rgba(18, 98, 58, 0.87), rgba(18, 98, 58, 0.95)), url('/images/backgrounds/core-features.webp')",
 				backgroundSize: "cover",
 				backgroundPosition: "center",
 			}}

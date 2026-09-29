@@ -1,3 +1,4 @@
+import Navbar from "@/components/sections/Navbar";
 import HeroSection from "@/components/sections/Hero";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Features from "@/components/sections/CoreFeatures";
@@ -7,6 +8,7 @@ import CTABannerSection from "@/components/sections/CTABanner";
 
 export default function Home() {
 	return <div className="h-full">
+		<Navbar />
 		<HeroSection />
 		<HowItWorks />
 		<Features />
