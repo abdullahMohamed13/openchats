@@ -197,6 +197,21 @@ export default function Navbar() {
 								</a>
 							</li>
 						))}
+
+						{!isPending && !user && (
+							<li className="flex items-center gap-3 border-t border-foreground/10 px-3 pt-3 pb-1 sm:hidden">
+								<Link
+									href="/signin"
+									onClick={() => setMenuOpen(false)}
+									className="retro rounded-none px-3 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+								>
+									Login
+								</Link>
+								<Link href="/signup" onClick={() => setMenuOpen(false)}>
+									<BrutalButton className="retro px-4 py-2 text-xs">Get Started</BrutalButton>
+								</Link>
+							</li>
+						)}
 					</ul>
 				</div>
 			)}
