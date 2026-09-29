@@ -8,7 +8,7 @@ export default function HowItWorks() {
 			initial={{ opacity: 0 }}
 			animate={{opacity: 1}}
 		>
-			<section className="section-padding">
+			<section id="how-it-works" className="section-padding scroll-mt-14">
 				<SectionHeader label="How It Works" title="Getting started is simple" lineWidth={132} lineClassName="-mt-5 md:-translate-x-1" />
 				
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-around">
