@@ -1,0 +1,81 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { StreamChat } from "stream-chat";
+import { DEFAULT_AVATAR, type ChannelSummary, type DirectMessageSummary } from "./types";
+
+interface Conversations {
+	channels: ChannelSummary[];
+	dms: DirectMessageSummary[];
+	loading: boolean;
+}
+
+const EMPTY: Conversations = { channels: [], dms: [], loading: true };
+
+export function useConversations(client: StreamChat | null): Conversations {
+	const [state, setState] = useState<Conversations>(EMPTY);
+
+	useEffect(() => {
+		if (!client?.userID) return;
+		const userId = client.userID;
+		let active = true;
+
+		const load = async () => {
+			const result = await client.queryChannels(
+				{ type: "messaging", members: { $in: [userId] } },
+				[{ last_message_at: -1 }],
+				{ watch: true, presence: true, state: true },
+			);
+			if (!active) return;
+
+			const channels: ChannelSummary[] = [];
+			const dms: DirectMessageSummary[] = [];
+
+			for (const channel of result) {
+				const id = channel.id;
+				if (!id) continue;
+
+				const data = channel.data as { name?: unknown; isChannel?: unknown } | undefined;
+				const name = typeof data?.name === "string" ? data.name : "";
+				const members = Object.values(channel.state.members ?? {});
+				const unreadCount = channel.countUnread();
+
+				if (data?.isChannel === true || name.length > 0) {
+					channels.push({ id, name: name || id, unreadCount });
+				} else {
+					const other = members.find((member) => member.user_id !== userId)?.user;
+					dms.push({
+						id,
+						name: other?.name ?? other?.id ?? "Unknown",
+						avatar: other?.image ?? DEFAULT_AVATAR,
+						status: other?.online ? "online" : "offline",
+						unreadCount,
+					});
+				}
+			}
+
+			setState({ channels, dms, loading: false });
+		};
+
+		const refresh = () => {
+			void load().catch(() => {
+				if (active) setState((current) => ({ ...current, loading: false }));
+			});
+		};
+
+		refresh();
+
+		client.on("channel.created", refresh);
+		client.on("channel.deleted", refresh);
+		client.on("notification.message_new", refresh);
+
+		return () => {
+			active = false;
+			client.off("channel.created", refresh);
+			client.off("channel.deleted", refresh);
+			client.off("notification.message_new", refresh);
+		};
+	}, [client]);
+
+	return state;
+}
