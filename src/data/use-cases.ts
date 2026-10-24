@@ -12,7 +12,7 @@ export const USE_CASES: UseCase[] = [
 			"Keep your team aligned with organized channels for projects, departments, and daily standups. Share files, send quick updates, and keep work conversations searchable and out of email.",
 	},
 	{
-		title: "Clubs & Societies",
+		title: "Clubs",
 		heading: "Coordinate, announce, celebrate",
 		description:
 			"Run your student club or society from one place. Coordinate events, share announcements, manage sign-ups, and keep conversations going between meetings.",

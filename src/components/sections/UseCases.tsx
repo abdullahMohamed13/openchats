@@ -43,12 +43,12 @@ export default function UseCases() {
 								onClick={() => setActive(index)}
 								aria-label={`Show ${useCase.title} use case`}
 								aria-current={isActive || undefined}
-								className="group border-b border-foreground/10 py-2 md:py-3 text-left cursor-pointer"
+								className="group block w-full overflow-hidden border-b border-foreground/10 pt-2 md:pt-3 text-left cursor-pointer"
 							>
 								<span
 									className={cn(
-										"font-press-start text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight transition-colors duration-300",
-										isActive ? "text-foreground" : "text-foreground/20 group-hover:text-foreground/60",
+										"block font-press-start text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight translate-y-[15%] transition-all duration-300 group-hover:translate-y-0 group-hover:font-bold group-focus-visible:translate-y-0 group-focus-visible:font-bold",
+										isActive ? "text-foreground" : "text-foreground/20 group-hover:text-foreground group-focus-visible:text-foreground",
 									)}
 								>
 									{useCase.title}
@@ -67,7 +67,7 @@ export default function UseCases() {
 							exit={{ opacity: 0, y: -12 }}
 							transition={{ duration: DURATION_MID, ease: "easeInOut" }}
 						>
-							<h3 className="font-press-start text-xl md:text-2xl text-foreground">{current.heading}</h3>
+							<h3 className="font-press-start text-xl md:text-2xl text-primary">{current.heading}</h3>
 							<p className="mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
 								{current.description}
 							</p>
