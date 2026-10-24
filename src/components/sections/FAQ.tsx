@@ -15,7 +15,7 @@ export default function FAQSection() {
   return (
 		<section id="faq" className="section-padding w-full gap-8 scroll-mt-14">
       
-      <SectionHeader label="FAQ" title="Frequently Asked Questions" />
+			<SectionHeader label="FAQ" title="Frequently Asked Questions" />
       
       <Accordion className="w-full" type="single" collapsible>
           {FAQS.map((faq) => (

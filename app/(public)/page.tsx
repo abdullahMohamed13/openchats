@@ -10,9 +10,9 @@ export default function Home() {
 	return <div className="h-full">
 		<Navbar />
 		<HeroSection />
-		<HowItWorks />
-		<Features />
 		<UseCases />
+		<Features />
+		<HowItWorks />
 		<FAQSection />
 		<CTABannerSection />
 	</div>

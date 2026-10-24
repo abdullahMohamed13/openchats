@@ -12,9 +12,9 @@ import { useSmoothScroll } from "@/providers/SmoothScrollProvider";
 import "@/styles/retro.css";
 
 const LINKS = [
-	{ href: "#how-it-works", label: "How it works" },
-	{ href: "#features", label: "Features" },
 	{ href: "#use-cases", label: "Use cases" },
+	{ href: "#features", label: "Features" },
+	{ href: "#how-it-works", label: "How it works" },
 	{ href: "#faq", label: "FAQ" },
 ] as const;
 
@@ -61,9 +61,10 @@ export default function Navbar() {
 
 	return (
 		<header className="sticky top-0 z-50 border-b-2 border-foreground/10 bg-background/90 backdrop-blur-sm">
-			<div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:px-8">
-				<Link href="/" className="shrink-0" aria-label="OpenChats home">
+			<div className="mx-auto flex h-[var(--nav-height)] max-w-6xl items-center gap-3 px-4 md:px-8">
+				<Link href="/" className="flex shrink-0 items-center gap-2" aria-label="OpenChats home">
 					<Image src="/logo.webp" alt="OpenChats" width={28} height={28} className="size-7 object-contain" />
+					<h1 className="font-brogetta font-bold text-2xl leading-none">OpenChats</h1>
 				</Link>
 
 				<nav aria-label="Main" className="hidden md:block">
@@ -83,7 +84,7 @@ export default function Navbar() {
 				</nav>
 
 				<div className="ml-auto flex items-center gap-2">
-					{isPending ? null : user ? (
+					{user && !isPending ? (
 						<div ref={userMenuRef} className="relative">
 							<button
 								type="button"
@@ -198,7 +199,7 @@ export default function Navbar() {
 							</li>
 						))}
 
-						{!isPending && !user && (
+						{!user && (
 							<li className="flex items-center gap-3 border-t border-foreground/10 px-3 pt-3 pb-1 sm:hidden">
 								<Link
 									href="/signin"

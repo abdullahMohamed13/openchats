@@ -7,13 +7,16 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
+import { Users } from "pixelarticons/react";
 import { DURATION_SLOW } from "@/lib/motion";
 import { authClient } from "@/lib/auth-client";
+import { useSmoothScroll } from "@/providers/SmoothScrollProvider";
 import BrutalButton from "../ui/brutal-button";
 
 export default function HeroSection() {
 	const parallaxRef = useRef<HTMLDivElement>(null);
 	const { data: session, isPending } = authClient.useSession();
+	const { scrollTo } = useSmoothScroll();
 	const isSignedIn = !isPending && !!session;
 
 	useEffect(() => {
@@ -77,37 +80,58 @@ export default function HeroSection() {
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							transition={{ duration: DURATION_SLOW }}
-							data-parallax-layer="1" className="parallax__layer-title flex-col-center gap-4"
+							data-parallax-layer="1" className="parallax__layer-title flex-col-center gap-4 w-full"
 						>
-							<div className="flex-col-center">
+							<div className="flex w-[96%] flex-col items-center gap-3 px-5 md:px-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
 								<Image
-									src="/logo.webp"
+									src="/logo-alt.webp"
 									alt="OpenChats logo"
 									loading="eager"
-									width={170}
-									height={170}
+									width={260}
+									height={260}
 									draggable={false}
-									className="z-2 size-[150px]! lg:size-[170px] object-contain will-change-transform"
-								/>
-								<h1 className="font-brogetta font-bold text-6xl! md:text-7xl lg:text-8xl! -mt-4">
-									OpenChats
-								</h1>
-							<h3 className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 capitalize mt-3 md:[&_span]:italic">
-								<span>Your team</span>
-								<span aria-hidden className="text-accent select-none">·</span>
-								<span>Your conversations</span>
-								<span aria-hidden className="text-accent select-none">·</span>
-								<span>One place</span>
-							</h3>
+									className="z-2 size-[150px]! lg:size-[320px]! object-contain will-change-transform lg:order-2 lg:[mask-image:linear-gradient(to_right,transparent,black_20%)]"
+							/>
+								
+							<div className="flex-col-center lg:order-1 lg:items-start lg:justify-start lg:text-left">
+								<p className="inline-flex items-center gap-2.5 border-2 border-black bg-foreground py-1.5 pr-3.5 pl-1.5 font-quera text-[10px] uppercase tracking-[0.18em] text-black/80 shadow-[3px_3px_0_0_var(--accent)] md:text-[11px]">
+									<span aria-hidden className="flex size-5 items-center justify-center bg-primary text-foreground">
+										<Users width={12} height={12} />
+									</span>
+									For teams, clubs &amp; communities
+								</p>
+
+								<h2 className="mt-3 font-press-start text-lg leading-[1.2] font-bold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl">
+									<span className="block text-foreground">Team conversations</span>
+									<span className="block text-accent">finally organized</span>
+								</h2>
+
+								<p className="font-quera mt-5 max-w-md text-center text-sm leading-relaxed text-foreground/75 md:text-base lg:text-left">
+									Channels for projects, DMs for quick questions, and files that stay where the conversation happens. Everything searchable, everything out of email.
+								</p>
+
+								<div className="mt-6 flex flex-col items-center gap-4 sm:flex-row">
+									<Link href={isSignedIn ? "/dashboard" : "/signup"} className="w-full sm:w-auto">
+										<BrutalButton className="w-full sm:w-auto">{isSignedIn ? "Go to Dashboard" : "Start Chatting"}</BrutalButton>
+									</Link>
+
+									<a
+										href="#how-it-works"
+										onClick={(e) => {
+											e.preventDefault();
+											scrollTo("#how-it-works");
+											history.replaceState(null, "", "#how-it-works");
+										}}
+										className="group inline-flex w-full items-center justify-center gap-2 border-2 border-foreground px-6 py-3 font-bold transition-colors duration-200 hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground sm:w-auto"
+									>
+										See how it works
+										<span aria-hidden className="transition-transform duration-200 group-hover:translate-y-0.5">
+											↓
+										</span>
+									</a>
+								</div>
 							</div>
-							<p className="max-w-md text-sm md:text-base text-foreground/80">
-								Bring your teams, workspaces, channels, and direct conversations together in one place.
-							</p>
-							
-						<Link href={isSignedIn ? "/dashboard" : "/signup"}>
-							<BrutalButton className="mt-2">{isSignedIn ? "Go to Dashboard" : "Get Started"}</BrutalButton>
-						</Link>
-							
+							</div>
 						</motion.div>
 						</div>
 					</div>

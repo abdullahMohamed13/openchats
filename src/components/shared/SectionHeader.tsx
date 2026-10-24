@@ -16,7 +16,7 @@ export default function SectionHeader({ label, title, lineWidth = 65, lineClassN
 			{showLine && (
 				<Line className={cn("-mt-4 rotate-179 md:-translate-x-3", lineClassName)} width={lineWidth} />
 			)}
-			<p className={`${showLine ? "-mt-2" : "mt-1"} text-3xl md:text-4xl capitalize text-center md:text-left`}>{title}</p>
+			<p className={`${showLine ? "mt-1" : "mt-4"} font-press-start text-3xl md:text-4xl capitalize text-center md:text-left`}>{title}</p>
 		</div>
 	);
 }
