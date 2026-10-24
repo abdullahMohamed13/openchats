@@ -16,7 +16,7 @@ export default function InfoCard({ title, description, children, className }: In
 				className,
 			)}
 		>
-			<h3 className="text-xl md:text-2xl font-bold text-foreground">
+			<h3 className="font-press-start text-xl md:text-2xl font-bold text-foreground">
 				{title}
 			</h3>
 			{description && (
