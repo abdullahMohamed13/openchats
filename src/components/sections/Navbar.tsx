@@ -97,7 +97,7 @@ export default function Navbar() {
 								{showAvatar ? (
 									<Image
 										src={user.image!}
-										alt=""
+										alt="User Image"
 										width={28}
 										height={28}
 										onError={() => setAvatarBroken(true)}
@@ -114,7 +114,7 @@ export default function Navbar() {
 									className="absolute right-0 top-full z-50 mt-2 w-52 border-2 border-foreground bg-background p-1 shadow-[3px_3px_0px_var(--accent)]"
 								>
 									<div className="border-b border-foreground/10 px-3 py-2">
-										<p className="retro truncate text-xs font-medium">{user.name}</p>
+										<p className="retro text-xs font-medium">{user.name}</p>
 										{user.username && (
 											<p className="retro truncate text-[10px] text-muted-foreground">@{user.username}</p>
 										)}
