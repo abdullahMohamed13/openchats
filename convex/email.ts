@@ -23,23 +23,13 @@ export async function sendPasswordResetEmail({ to, name, url }: ResetEmailParams
 		body: JSON.stringify({
 			from,
 			to: [to],
-			subject: "Reset your OpenChats password",
-			text: [
-				`Hi${name ? ` ${name}` : ""},`,
-				"",
-				"We received a request to reset your OpenChats password.",
-				"",
-				`Reset your password: ${url}`,
-				"",
-				"This link expires in 1 hour. If you didn't request this, you can safely ignore this email.",
-			].join("\n"),
-			html: `
-				<div style="font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.5;">
-					<p>Hi${name ? ` ${escapeHtml(name)}` : ""},</p>
-					<p>We received a request to reset your OpenChats password.</p>
-					<p><a href="${url}">Reset your password</a></p>
-					<p style="color:#666; font-size: 14px;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
-				</div>`.trim(),
+			template: {
+				id: "f4d3ded5-4e60-4933-a7c7-3e4e7f9e6abb",
+				variables: {
+					USER_NAME: name || "OpenChats User",
+					RESET_PASSWORD_URL: url,
+				}
+			}
 		}),
 	});
 
@@ -49,14 +39,14 @@ export async function sendPasswordResetEmail({ to, name, url }: ResetEmailParams
 	}
 }
 
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#39;");
-}
+// function escapeHtml(value: string): string {
+// 	return value
+// 		.replace(/&/g, "&amp;")
+// 		.replace(/</g, "&lt;")
+// 		.replace(/>/g, "&gt;")
+// 		.replace(/"/g, "&quot;")
+// 		.replace(/'/g, "&#39;");
+// }
 
 
 export function toSiteUrl(url: string): string {
