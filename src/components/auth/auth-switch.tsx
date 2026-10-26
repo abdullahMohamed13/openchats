@@ -58,7 +58,7 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
     setSocialProvider(provider);
     handleSocialLogin({
       provider,
-      callbackURL: "/dashboard",
+      callbackURL: "/chat",
       setLoading: (value) => {
         setLoading(value);
         if (!value) setSocialProvider(null);
@@ -132,12 +132,12 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
         handleUsernameSignIn({
           username: String(formData.get("username") ?? ""),
           password,
-          callbackURL: "/dashboard",
+          callbackURL: "/chat",
           setLoading,
         });
       } else {
         if (!validateForm(SIGN_IN_EMAIL_SPECS, form)) return;
-        handleSignIn({ email, password, callbackURL: "/dashboard", setLoading });
+        handleSignIn({ email, password, callbackURL: "/chat", setLoading });
       }
     }
   };

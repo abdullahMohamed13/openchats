@@ -175,12 +175,12 @@ export default function OnboardingWizard() {
 			return;
 		}
 
-		router.push("/dashboard");
+		router.push("/chat");
 	};
 
 	const handleSkip = async () => {
 		await authClient.updateUser({ onboarded: false });
-		router.push("/dashboard");
+		router.push("/chat");
 	};
 
 	const currentStep = STEPS[step];

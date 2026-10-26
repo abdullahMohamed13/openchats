@@ -1,7 +1,7 @@
 "use client";
 /*
  Lenis smooth scrolling, scoped to the public pages. Mounted from
- app/(public)/layout.tsx so the dashboard keeps native scrolling.
+ app/(public)/layout.tsx so the chat page keeps native scrolling.
 
  The Lenis instance is published on context so anchor links (navbar)
  can route through lenis.scrollTo instead of jumping natively.

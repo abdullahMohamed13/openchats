@@ -9,7 +9,7 @@ import { useConversations } from "./use-conversations";
 import { DEFAULT_AVATAR, type CurrentUser } from "./types";
 import { authClient } from "@/lib/auth-client";
 
-export function DashboardShell() {
+export function ChatShell() {
 	const { client } = useChatContext();
 	const { data: session } = authClient.useSession();
 	const { channels, dms, loading } = useConversations(client);

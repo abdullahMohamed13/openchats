@@ -4,7 +4,7 @@ import { friendlyAuthError } from "./auth-validation"
 import type { AuthSetLoading, SocialProviders } from "@/types/auth"
 
 type SocialProps = SocialProviders & {
-	callbackURL: "/dashboard" | "/onboarding"
+	callbackURL: "/chat" | "/onboarding"
 }
 
 export const handleSocialLogin = async ({

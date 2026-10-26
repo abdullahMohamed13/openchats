@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 	const router = useRouter();
 
 	useEffect(() => {
-		if (!isPending && session) router.replace("/dashboard");
+		if (!isPending && session) router.replace("/chat");
 	}, [session, isPending, router]);
 
 	if (isPending || session) return null;
