@@ -36,7 +36,7 @@ function generateInviteToken(): string {
 }
 
 function siteBaseUrl(): string {
-	const configured = process.env.SITE_URL?.trim();
+	const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 	return (configured || "http://localhost:3000").replace(/\/+$/, "");
 }
 
@@ -175,6 +175,7 @@ export const listWorkspaceInvites = query({
 			.query("workspaceInvites")
 			.withIndex("workspaceId", (q) => q.eq("workspaceId", workspaceId))
 			.collect();
+		const now = Date.now();
 
 		return invites
 			.sort((a, b) => b.createdAt - a.createdAt)
@@ -187,6 +188,12 @@ export const listWorkspaceInvites = query({
 				expiresAt: invite.expiresAt,
 				createdAt: invite.createdAt,
 				usedAt: invite.usedAt ?? null,
+				status:
+					invite.usedAt !== undefined
+						? ("used" as const)
+						: invite.expiresAt <= now
+							? ("expired" as const)
+							: ("active" as const),
 			}));
 	},
 });

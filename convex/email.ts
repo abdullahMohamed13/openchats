@@ -129,7 +129,7 @@ export async function sendWorkspaceInviteEmail({
 }
 
 export function toSiteUrl(url: string): string {
-	const siteUrl = process.env.SITE_URL;
+	const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 	if (!siteUrl) return url;
 
 	try {
