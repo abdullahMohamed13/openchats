@@ -3,9 +3,11 @@ import { authComponent } from "./auth";
 
 const STREAM_API_BASE = "https://chat.stream-io-api.com";
 
-const DEFAULT_CHANNELS: { id: string; name: string }[] = [
-	{ id: "general", name: "general" },
-];
+export type StreamServerAuth = {
+	apiKey: string;
+	secret: string;
+	serverToken: string;
+};
 
 function streamHeaders(serverToken: string): Record<string, string> {
 	return {
@@ -13,35 +15,6 @@ function streamHeaders(serverToken: string): Record<string, string> {
 		"stream-auth-type": "jwt",
 		"Content-Type": "application/json",
 	};
-}
-
-async function ensureDefaultChannels(apiKey: string, serverToken: string, userId: string) {
-	const query = `?api_key=${encodeURIComponent(apiKey)}`;
-	for (const channel of DEFAULT_CHANNELS) {
-		const url = `${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channel.id)}`;
-		const created = await fetch(`${url}/query${query}`, {
-			method: "POST",
-			headers: streamHeaders(serverToken),
-			body: JSON.stringify({
-				data: { name: channel.name, created_by_id: userId, isChannel: true },
-				state: true,
-				watch: false,
-				presence: false,
-			}),
-		});
-		if (!created.ok) {
-			throw new Error(`Failed to seed channel ${channel.id} (${created.status}): ${await created.text()}`);
-		}
-
-		const joined = await fetch(`${url}${query}`, {
-			method: "POST",
-			headers: streamHeaders(serverToken),
-			body: JSON.stringify({ add_members: [userId], data: { name: channel.name, isChannel: true } }),
-		});
-		if (!joined.ok) {
-			throw new Error(`Failed to join channel ${channel.id} (${joined.status}): ${await joined.text()}`);
-		}
-	}
 }
 
 function bytesToBase64url(bytes: Uint8Array): string {
@@ -75,40 +48,177 @@ export async function signStreamToken(
 	return `${encodedHeader}.${encodedPayload}.${bytesToBase64url(new Uint8Array(signature))}`;
 }
 
+export async function getStreamServerAuth(): Promise<StreamServerAuth> {
+	const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+	const secret = process.env.STREAM_SECRET_KEY;
+	if (!apiKey || !secret) {
+		throw new Error("Stream API credentials are not configured");
+	}
+
+	return { apiKey, secret, serverToken: await signStreamToken(secret, { server: true }) };
+}
+
+export async function upsertStreamUser(
+	auth: StreamServerAuth,
+	user: { id: string; name: string; image?: string },
+): Promise<void> {
+	const response = await fetch(
+		`${STREAM_API_BASE}/users?api_key=${encodeURIComponent(auth.apiKey)}`,
+		{
+			method: "POST",
+			headers: streamHeaders(auth.serverToken),
+			body: JSON.stringify({
+				users: {
+					[user.id]: {
+						id: user.id,
+						name: user.name,
+						image: user.image,
+						role: "user",
+					},
+				},
+			}),
+		},
+	);
+
+	if (!response.ok) {
+		const detail = await response.text();
+		throw new Error(`Failed to sync Stream user (${response.status}): ${detail}`);
+	}
+}
+
+export function slugifyChannelName(value: string): string {
+	return value
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.slice(0, 40);
+}
+
+function channelUrl(auth: StreamServerAuth, channelId: string): string {
+	return `${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channelId)}?api_key=${encodeURIComponent(auth.apiKey)}`;
+}
+
+export async function createWorkspaceChannel(
+	auth: StreamServerAuth,
+	options: {
+		workspaceId: string;
+		userId: string;
+		name: string;
+		slug?: string;
+		memberIds?: string[];
+	},
+): Promise<string> {
+	const slug = options.slug ?? (slugifyChannelName(options.name) || "channel");
+	const channelId = `${options.workspaceId}-${slug}`;
+	const base = `${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channelId)}`;
+	const query = `?api_key=${encodeURIComponent(auth.apiKey)}`;
+	const url = `${base}${query}`;
+
+	const created = await fetch(`${base}/query${query}`, {
+		method: "POST",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({
+			data: {
+				name: options.name,
+				workspaceId: options.workspaceId,
+				created_by_id: options.userId,
+				isChannel: true,
+			},
+			state: true,
+			watch: false,
+			presence: false,
+		}),
+	});
+	if (!created.ok) {
+		throw new Error(
+			`Failed to create channel ${channelId} (${created.status}): ${await created.text()}`,
+		);
+	}
+
+	const memberIds = Array.from(new Set([options.userId, ...(options.memberIds ?? [])]));
+	const joined = await fetch(url, {
+		method: "POST",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({ add_members: memberIds }),
+	});
+	if (!joined.ok) {
+		throw new Error(
+			`Failed to join channel ${channelId} (${joined.status}): ${await joined.text()}`,
+		);
+	}
+
+	return channelId;
+}
+
+export async function addUserToChannel(
+	auth: StreamServerAuth,
+	channelId: string,
+	userId: string,
+): Promise<void> {
+	const response = await fetch(channelUrl(auth, channelId), {
+		method: "POST",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({ add_members: [userId] }),
+	});
+	if (response.status === 404) return;
+	if (!response.ok) {
+		throw new Error(
+			`Failed to add ${userId} to ${channelId} (${response.status}): ${await response.text()}`,
+		);
+	}
+}
+
+export async function removeUserFromChannel(
+	auth: StreamServerAuth,
+	channelId: string,
+	userId: string,
+): Promise<void> {
+	const response = await fetch(channelUrl(auth, channelId), {
+		method: "POST",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({ remove_members: [userId] }),
+	});
+	if (response.status === 404) return;
+	if (!response.ok) {
+		throw new Error(
+			`Failed to remove ${userId} from ${channelId} (${response.status}): ${await response.text()}`,
+		);
+	}
+}
+
+export async function deleteStreamChannel(
+	auth: StreamServerAuth,
+	channelId: string,
+): Promise<void> {
+	const response = await fetch(channelUrl(auth, channelId), {
+		method: "DELETE",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({ hard_delete: true }),
+	});
+	if (response.status === 404) return;
+	if (!response.ok) {
+		throw new Error(
+			`Failed to delete channel ${channelId} (${response.status}): ${await response.text()}`,
+		);
+	}
+}
+
 export const generateStreamToken = action({
 	args: {},
 	handler: async (ctx) => {
 		const user = await authComponent.getAuthUser(ctx);
-
-		const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
-		const secret = process.env.STREAM_SECRET_KEY;
-		if (!apiKey || !secret) {
-			throw new Error("Stream API credentials are not configured");
-		}
+		const auth = await getStreamServerAuth();
 
 		const userId = String(user._id);
 		const name = user.name?.trim() || user.username || user.email || userId;
 		const image = user.image ?? undefined;
 
-		const serverToken = await signStreamToken(secret, { server: true });
-		const response = await fetch(`${STREAM_API_BASE}/users?api_key=${encodeURIComponent(apiKey)}`, {
-			method: "POST",
-			headers: streamHeaders(serverToken),
-			body: JSON.stringify({
-				users: { [userId]: { id: userId, name, image, role: "user" } },
-			}),
-		});
-
-		if (!response.ok) {
-			const detail = await response.text();
-			throw new Error(`Failed to sync Stream user (${response.status}): ${detail}`);
-		}
-
-		await ensureDefaultChannels(apiKey, serverToken, userId);
+		await upsertStreamUser(auth, { id: userId, name, image });
 
 		return {
-			token: await signStreamToken(secret, { user_id: userId }),
-			apiKey,
+			token: await signStreamToken(auth.secret, { user_id: userId }),
+			apiKey: auth.apiKey,
 			userId,
 			name,
 			image,
