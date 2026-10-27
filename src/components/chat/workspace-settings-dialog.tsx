@@ -12,6 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { BrutalButton } from "@/components/ui/brutal-button";
 import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error-message";
 import {
 	DEFAULT_AVATAR,
 	type WorkspaceMember,
@@ -89,9 +90,7 @@ export function WorkspaceSettingsDialog({
 			await renameWorkspace({ workspaceId, name: trimmedName });
 			setNameSaved(true);
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not rename workspace.",
-			);
+			setError(getErrorMessage(cause, "Could not rename workspace."));
 		} finally {
 			setSavingName(false);
 		}
@@ -103,9 +102,7 @@ export function WorkspaceSettingsDialog({
 		try {
 			await removeMember({ workspaceId, userId: member.userId });
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not remove member.",
-			);
+			setError(getErrorMessage(cause, "Could not remove member."));
 		} finally {
 			setRemovingId(null);
 		}
@@ -122,9 +119,7 @@ export function WorkspaceSettingsDialog({
 			await leaveWorkspace({ workspaceId });
 			router.push("/chat");
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not leave workspace.",
-			);
+			setError(getErrorMessage(cause, "Could not leave workspace."));
 			setLeaving(false);
 			setConfirmLeave(false);
 		}
@@ -141,9 +136,7 @@ export function WorkspaceSettingsDialog({
 			await deleteWorkspace({ workspaceId });
 			router.push("/chat");
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not delete workspace.",
-			);
+			setError(getErrorMessage(cause, "Could not delete workspace."));
 			setDeleting(false);
 			setConfirmDelete(false);
 		}

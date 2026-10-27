@@ -9,6 +9,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { BrutalButton } from "@/components/ui/brutal-button";
 import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error-message";
 
 interface InviteDialogProps {
 	workspaceId: Id<"workspaces">;
@@ -57,9 +58,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 			const { token } = await createLinkInvite({ workspaceId });
 			setLinkToken(token);
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not create a link.",
-			);
+			setError(getErrorMessage(cause, "Could not create a link."));
 		} finally {
 			setLinkLoading(false);
 		}
@@ -109,9 +108,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 				setEmail("");
 			}
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not send the invite.",
-			);
+			setError(getErrorMessage(cause, "Could not send the invite."));
 		} finally {
 			setSaving(false);
 		}

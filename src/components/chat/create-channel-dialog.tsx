@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { BrutalButton } from "@/components/ui/brutal-button";
 import { Input } from "@/components/ui/8bit/input";
+import { getErrorMessage } from "@/lib/error-message";
 
 interface CreateChannelDialogProps {
 	workspaceId: Id<"workspaces">;
@@ -49,11 +50,7 @@ export function CreateChannelDialog({
 			setName("");
 			onCreated(channelId);
 		} catch (cause) {
-			setError(
-				cause instanceof Error
-					? cause.message
-					: "Could not create the channel.",
-			);
+			setError(getErrorMessage(cause, "Could not create the channel."));
 		} finally {
 			setSaving(false);
 		}

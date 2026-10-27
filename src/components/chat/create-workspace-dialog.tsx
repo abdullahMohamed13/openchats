@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { BrutalButton } from "@/components/ui/brutal-button";
 import { Input } from "@/components/ui/8bit/input";
+import { getErrorMessage } from "@/lib/error-message";
 
 interface CreateWorkspaceDialogProps {
 	onClose: () => void;
@@ -44,11 +45,7 @@ export function CreateWorkspaceDialog({ onClose }: CreateWorkspaceDialogProps) {
 			onClose();
 			router.push(`/w/${workspaceId}`);
 		} catch (cause) {
-			setError(
-				cause instanceof Error
-					? cause.message
-					: "Could not create the workspace.",
-			);
+			setError(getErrorMessage(cause, "Could not create the workspace."));
 		} finally {
 			setSaving(false);
 		}

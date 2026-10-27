@@ -85,6 +85,7 @@ export const getInvite = query({
 			workspaceName: workspace.name,
 			kind: invite.kind,
 			role: invite.role,
+			email: invite.email ?? null,
 			inviterName:
 				inviterDoc?.name?.trim() ||
 				inviterDoc?.username ||

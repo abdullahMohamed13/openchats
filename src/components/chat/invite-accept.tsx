@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { BrutalButton } from "@/components/ui/brutal-button";
+import { getErrorMessage } from "@/lib/error-message";
 
 const PENDING_INVITE_KEY = "openchats:pendingInvite";
 
@@ -35,14 +36,23 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 			window.localStorage.removeItem(PENDING_INVITE_KEY);
 			router.push(`/w/${workspaceId}`);
 		} catch (cause) {
-			setError(
-				cause instanceof Error ? cause.message : "Could not accept the invite.",
-			);
+			setError(getErrorMessage(cause, "Could not accept the invite."));
 			setAccepting(false);
 		}
 	};
 
+	const handleSignOut = async () => {
+		await authClient.signOut();
+		window.location.reload();
+	};
+
 	const callback = encodeURIComponent(`/invite/${token}`);
+	const signedInEmail = session?.user?.email?.toLowerCase() ?? "";
+	const emailMismatch =
+		invite?.status === "valid" &&
+		invite.kind === "email" &&
+		Boolean(invite.email) &&
+		signedInEmail !== invite.email?.toLowerCase();
 
 	let body: React.ReactNode;
 
@@ -113,18 +123,36 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 				<p className="mt-2 text-xs text-muted-foreground">
 					You&apos;re signed in as {session.user.email ?? session.user.name}.
 				</p>
-				<BrutalButton
-					type="button"
-					onClick={() => void handleAccept()}
-					disabled={accepting}
-					className="mt-6 w-full px-4 py-3 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{accepting ? "Joining…" : `Join ${invite.workspaceName}`}
-				</BrutalButton>
-				{error && (
-					<p role="alert" className="mt-4 text-xs text-danger">
-						{error}
-					</p>
+				{emailMismatch ? (
+					<>
+						<p className="mt-4 text-xs text-danger">
+							This invite was sent to {invite.email}. Sign out and sign in with
+							that address to join.
+						</p>
+						<BrutalButton
+							type="button"
+							onClick={() => void handleSignOut()}
+							className="mt-6 w-full px-4 py-3 text-xs uppercase"
+						>
+							Sign out
+						</BrutalButton>
+					</>
+				) : (
+					<>
+						<BrutalButton
+							type="button"
+							onClick={() => void handleAccept()}
+							disabled={accepting}
+							className="mt-6 w-full px-4 py-3 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{accepting ? "Joining…" : `Join ${invite.workspaceName}`}
+						</BrutalButton>
+						{error && (
+							<p role="alert" className="mt-4 text-xs text-danger">
+								{error}
+							</p>
+						)}
+					</>
 				)}
 			</>
 		);
