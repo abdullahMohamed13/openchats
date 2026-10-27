@@ -1,5 +1,3 @@
-"use client";
-
 import { Menu, Search, Bell } from "pixelarticons/react";
 import { UnreadBadge } from "./unread-badge";
 

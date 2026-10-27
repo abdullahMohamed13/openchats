@@ -121,13 +121,13 @@ export default function Navbar() {
 									</div>
 
 									<Link
-										href="/dashboard"
+										href="/chat"
 										role="menuitem"
 										onClick={() => setUserOpen(false)}
 										className="retro flex items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-muted"
 									>
 										<Grid2x22 width={16} height={16} aria-hidden />
-										Dashboard
+										Chat
 									</Link>
 
 									{needsOnboarding && (

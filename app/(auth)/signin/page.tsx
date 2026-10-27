@@ -6,6 +6,22 @@ export const metadata: Metadata = {
 	description: "Sign in to OpenChats and jump back into your workspaces, channels, and direct messages."
 };
 
-export default function SignInPage() {
-	return <AuthSwitch initialMode="sign-in" />;
+type SignInPageProps = {
+	searchParams: Promise<{ callbackUrl?: string | string[] }>;
+};
+
+function safeCallbackUrl(value: string | string[] | undefined): string {
+	const raw = Array.isArray(value) ? value[0] : value;
+	if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
+	return "/chat";
+}
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+	const params = await searchParams;
+	return (
+		<AuthSwitch
+			initialMode="sign-in"
+			callbackURL={safeCallbackUrl(params.callbackUrl)}
+		/>
+	);
 }

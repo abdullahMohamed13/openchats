@@ -111,8 +111,8 @@ export default function HeroSection() {
 								</p>
 
 								<div className="mt-6 flex flex-col items-center gap-4 sm:flex-row">
-									<Link href={isSignedIn ? "/dashboard" : "/signup"} className="w-full sm:w-auto">
-										<BrutalButton className="w-full sm:w-auto">{isSignedIn ? "Go to Dashboard" : "Start Chatting"}</BrutalButton>
+									<Link href={isSignedIn ? "/chat" : "/signup"} className="w-full sm:w-auto">
+										<BrutalButton className="w-full sm:w-auto">{isSignedIn ? "Go to Chat" : "Start Chatting"}</BrutalButton>
 									</Link>
 
 									<a

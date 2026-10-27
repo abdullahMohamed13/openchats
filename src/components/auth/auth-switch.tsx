@@ -19,6 +19,7 @@ import "@/styles/auth.css";
 
 export type AuthSwitchProps = {
   initialMode?: "sign-in" | "sign-up";
+  callbackURL?: string;
 };
 
 const SIGN_UP_SPECS: AuthFieldSpec[] = [
@@ -43,9 +44,10 @@ const SIGN_IN_USERNAME_SPECS: AuthFieldSpec[] = [
   { name: "password", label: "Password" },
 ];
 
-export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps = {}) {
+export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: AuthSwitchProps = {}) {
   const router = useRouter();
   const isSignUp = initialMode === "sign-up";
+  const resolvedCallbackURL = callbackURL ?? "/chat";
   const [loading, setLoading] = useState(false);
   const [socialProvider, setSocialProvider] = useState<SocialProvider | null>(null);
   const [signInMode, setSignInMode] = useState<"email" | "username">("email");
@@ -58,7 +60,7 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
     setSocialProvider(provider);
     handleSocialLogin({
       provider,
-      callbackURL: "/dashboard",
+      callbackURL: resolvedCallbackURL,
       setLoading: (value) => {
         setLoading(value);
         if (!value) setSocialProvider(null);
@@ -132,12 +134,12 @@ export default function AuthSwitch({ initialMode = "sign-in" }: AuthSwitchProps 
         handleUsernameSignIn({
           username: String(formData.get("username") ?? ""),
           password,
-          callbackURL: "/dashboard",
+          callbackURL: resolvedCallbackURL,
           setLoading,
         });
       } else {
         if (!validateForm(SIGN_IN_EMAIL_SPECS, form)) return;
-        handleSignIn({ email, password, callbackURL: "/dashboard", setLoading });
+        handleSignIn({ email, password, callbackURL: resolvedCallbackURL, setLoading });
       }
     }
   };

@@ -27,7 +27,7 @@ export const FAQS = [
   {
     question: "Can I belong to multiple workspaces?",
     answer:
-      "Yes. Switch between all the groups you belong to from one dashboard and keep every conversation organized.",
+      "Yes. Switch between all the groups you belong to from one layout and keep every conversation organized.",
   },
   {
     question: "Is OpenChats free?",
