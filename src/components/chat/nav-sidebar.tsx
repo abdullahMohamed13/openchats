@@ -2,31 +2,59 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronDown, Close, Plus, Search } from "pixelarticons/react";
+import {
+	Check,
+	ChevronDown,
+	Close,
+	Plus,
+	Search,
+	Settings2,
+	UserPlus,
+} from "pixelarticons/react";
 import { cn } from "@/lib/utils";
 import "@/styles/retro.css";
 import { ChannelItem } from "./channel-item";
 import { DMItem } from "./dm-item";
-import type { ChannelSummary, DirectMessageSummary } from "./types";
+import type {
+	ChannelSummary,
+	DirectMessageSummary,
+	WorkspaceSummary,
+} from "./types";
 
 interface NavSidebarProps {
 	workspaceName: string;
+	workspaces: WorkspaceSummary[];
+	activeWorkspaceId: string;
+	canManageWorkspace: boolean;
 	currentUserBadge?: string;
 	channels: ChannelSummary[];
 	dms: DirectMessageSummary[];
 	activeConversationId: string;
 	onSelectConversation: (id: string) => void;
+	onSelectWorkspace: (id: string) => void;
+	onCreateWorkspace: () => void;
+	onCreateChannel: () => void;
+	onOpenInvite: () => void;
+	onOpenSettings: () => void;
 	open?: boolean;
 	onClose?: () => void;
 }
 
 export function NavSidebar({
 	workspaceName,
+	workspaces,
+	activeWorkspaceId,
+	canManageWorkspace,
 	currentUserBadge,
 	channels,
 	dms,
 	activeConversationId,
 	onSelectConversation,
+	onSelectWorkspace,
+	onCreateWorkspace,
+	onCreateChannel,
+	onOpenInvite,
+	onOpenSettings,
 	open,
 	onClose,
 }: NavSidebarProps) {
@@ -34,6 +62,7 @@ export function NavSidebar({
 	const [dmsOpen, setDmsOpen] = useState(true);
 	const [query, setQuery] = useState("");
 	const [badgeBroken, setBadgeBroken] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
 
 	const normalized = query.trim().toLowerCase();
 	const filteredChannels = normalized
@@ -55,7 +84,84 @@ export function NavSidebar({
 				)}
 			>
 				<div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3">
-					<h2 className="truncate font-press-start text-[11px] uppercase text-foreground">{workspaceName}</h2>
+					<div className="relative min-w-0 flex-1">
+						<button
+							type="button"
+							onClick={() => setMenuOpen((value) => !value)}
+							aria-expanded={menuOpen}
+							aria-haspopup="menu"
+							className="flex min-w-0 items-center gap-1.5 text-foreground"
+						>
+							<h2 className="truncate font-press-start text-[11px] uppercase">{workspaceName}</h2>
+							<ChevronDown width={14} height={14} className="shrink-0 text-muted-foreground" aria-hidden />
+						</button>
+
+						{menuOpen && (
+							<>
+								<button
+									type="button"
+									aria-label="Close workspace menu"
+									onClick={() => setMenuOpen(false)}
+									className="fixed inset-0 z-40 cursor-default"
+								/>
+								<div
+									role="menu"
+									className="absolute left-0 top-full z-50 mt-2 flex w-60 flex-col border-2 border-foreground bg-background shadow-[4px_4px_0px_var(--foreground)]"
+								>
+									<p className="border-b border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+										Workspaces
+									</p>
+									<div className="max-h-48 overflow-y-auto p-1">
+										{workspaces.map((workspace) => (
+											<button
+												key={workspace._id}
+												type="button"
+												role="menuitem"
+												onClick={() => {
+													setMenuOpen(false);
+													onSelectWorkspace(workspace._id);
+												}}
+												className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+											>
+												<span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+												{workspace._id === activeWorkspaceId && (
+													<Check width={14} height={14} className="shrink-0 text-primary" aria-hidden />
+												)}
+											</button>
+										))}
+									</div>
+									<div className="border-t border-border p-1">
+										{canManageWorkspace && (
+											<MenuAction
+												icon={<UserPlus width={14} height={14} />}
+												label="Invite people"
+												onClick={() => {
+													setMenuOpen(false);
+													onOpenInvite();
+												}}
+											/>
+										)}
+										<MenuAction
+											icon={<Settings2 width={14} height={14} />}
+											label="Workspace settings"
+											onClick={() => {
+												setMenuOpen(false);
+												onOpenSettings();
+											}}
+										/>
+										<MenuAction
+											icon={<Plus width={14} height={14} />}
+											label="New workspace"
+											onClick={() => {
+												setMenuOpen(false);
+												onCreateWorkspace();
+											}}
+										/>
+									</div>
+								</div>
+							</>
+						)}
+					</div>
 					<button
 						type="button"
 						aria-label="Close navigation"
@@ -89,6 +195,7 @@ export function NavSidebar({
 							<button
 								type="button"
 								aria-label="Create channel"
+								onClick={onCreateChannel}
 								className="flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 							>
 								+</button>
@@ -161,6 +268,26 @@ export function NavSidebar({
 				</div>
 			</nav>
 		</div>
+	);
+}
+
+interface MenuActionProps {
+	icon: React.ReactNode;
+	label: string;
+	onClick: () => void;
+}
+
+function MenuAction({ icon, label, onClick }: MenuActionProps) {
+	return (
+		<button
+			type="button"
+			role="menuitem"
+			onClick={onClick}
+			className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+		>
+			{icon}
+			{label}
+		</button>
 	);
 }
 

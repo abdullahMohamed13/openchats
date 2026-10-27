@@ -22,3 +22,24 @@ export interface CurrentUser {
 	title?: string;
 	badge?: string;
 }
+
+export type WorkspaceRole = "owner" | "admin" | "member";
+
+export interface WorkspaceSummary {
+	_id: string;
+	name: string;
+	slug: string;
+	role: WorkspaceRole;
+	joinedAt: number;
+	createdAt: number;
+}
+
+export interface WorkspaceMember {
+	userId: string;
+	name: string;
+	username: string | null;
+	email: string | null;
+	image: string | null;
+	role: WorkspaceRole;
+	joinedAt: number;
+}

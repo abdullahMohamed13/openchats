@@ -12,7 +12,10 @@ interface Conversations {
 
 const EMPTY: Conversations = { channels: [], dms: [], loading: true };
 
-export function useConversations(client: StreamChat | null): Conversations {
+export function useConversations(
+	client: StreamChat | null,
+	workspaceId: string,
+): Conversations {
 	const [state, setState] = useState<Conversations>(EMPTY);
 
 	useEffect(() => {
@@ -35,23 +38,32 @@ export function useConversations(client: StreamChat | null): Conversations {
 				const id = channel.id;
 				if (!id) continue;
 
-				const data = channel.data as { name?: unknown; isChannel?: unknown } | undefined;
+				const data = channel.data as
+					| { name?: unknown; isChannel?: unknown; workspaceId?: unknown }
+					| undefined;
 				const name = typeof data?.name === "string" ? data.name : "";
+				const channelWorkspaceId =
+					typeof data?.workspaceId === "string" ? data.workspaceId : null;
 				const members = Object.values(channel.state.members ?? {});
 				const unreadCount = channel.countUnread();
 
-				if (data?.isChannel === true || name.length > 0) {
+				if (channelWorkspaceId === workspaceId) {
 					channels.push({ id, name: name || id, unreadCount });
-				} else {
-					const other = members.find((member) => member.user_id !== userId)?.user;
-					dms.push({
-						id,
-						name: other?.name ?? other?.id ?? "Unknown",
-						avatar: other?.image ?? DEFAULT_AVATAR,
-						status: other?.online ? "online" : "offline",
-						unreadCount,
-					});
+					continue;
 				}
+
+				if (channelWorkspaceId) continue;
+
+				if (data?.isChannel === true || name.length > 0) continue;
+
+				const other = members.find((member) => member.user_id !== userId)?.user;
+				dms.push({
+					id,
+					name: other?.name ?? other?.id ?? "Unknown",
+					avatar: other?.image ?? DEFAULT_AVATAR,
+					status: other?.online ? "online" : "offline",
+					unreadCount,
+				});
 			}
 
 			setState({ channels, dms, loading: false });
@@ -67,15 +79,19 @@ export function useConversations(client: StreamChat | null): Conversations {
 
 		client.on("channel.created", refresh);
 		client.on("channel.deleted", refresh);
+		client.on("notification.added_to_channel", refresh);
+		client.on("notification.removed_from_channel", refresh);
 		client.on("notification.message_new", refresh);
 
 		return () => {
 			active = false;
 			client.off("channel.created", refresh);
 			client.off("channel.deleted", refresh);
+			client.off("notification.added_to_channel", refresh);
+			client.off("notification.removed_from_channel", refresh);
 			client.off("notification.message_new", refresh);
 		};
-	}, [client]);
+	}, [client, workspaceId]);
 
 	return state;
 }

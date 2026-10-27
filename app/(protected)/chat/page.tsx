@@ -1,5 +1,5 @@
-import { ChatShell } from "@/components/chat/chat-shell";
+import { WorkspaceGate } from "@/components/chat/workspace-gate";
 
 export default function ChatPage() {
-  return <ChatShell />;
+  return <WorkspaceGate />;
 }

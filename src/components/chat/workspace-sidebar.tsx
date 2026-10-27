@@ -3,16 +3,33 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Flag, Settings2, MoreVertical } from "pixelarticons/react";
+import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 import { SignOutButton } from "./sign-out-button";
-import type { CurrentUser } from "./types";
+import type { CurrentUser, WorkspaceSummary } from "./types";
 
 interface WorkspaceSidebarProps {
 	currentUser: CurrentUser;
+	workspaces: WorkspaceSummary[];
+	activeWorkspaceId: string;
+	onCreateWorkspace: () => void;
+	onOpenSettings: () => void;
 }
 
-export function WorkspaceSidebar({ currentUser }: WorkspaceSidebarProps) {
+function workspaceInitials(name: string): string {
+	const [first = "", second = ""] = name.trim().split(/\s+/);
+	if (second) return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+	return name.slice(0, 2).toUpperCase();
+}
+
+export function WorkspaceSidebar({
+	currentUser,
+	workspaces,
+	activeWorkspaceId,
+	onCreateWorkspace,
+	onOpenSettings,
+}: WorkspaceSidebarProps) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const { data: session, isPending } = authClient.useSession();
 	const router = useRouter();
@@ -20,15 +37,52 @@ export function WorkspaceSidebar({ currentUser }: WorkspaceSidebarProps) {
 	const needsOnboarding = !isPending && !!session && session.user.onboarded !== true;
 
 	return (
-		<aside className="hidden w-16 shrink-0 flex-col items-center gap-4 border-r border-border bg-muted py-4 lg:flex">
-			<button
-				type="button"
-				aria-label="OpenChats home"
-				title="OpenChats"
-				className="flex size-10 items-center justify-center rounded-lg bg-primary font-press-start text-[10px] text-primary-foreground"
-			>
-				OC
-			</button>
+		<aside className="hidden w-16 shrink-0 flex-col items-center gap-3 border-r border-border bg-muted py-4 lg:flex">
+
+			<Image
+				src="/logo.webp"
+				className="rounded-lg border-2 border-foreground bg-primary font-press-start text-[10px] text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
+				alt="Openchats logo"
+				height={36}
+				width={36}
+			/>
+
+			<div className="h-px w-8 bg-border" aria-hidden />
+
+			<div className="flex w-full flex-1 flex-col items-center gap-2 overflow-y-auto py-1">
+				{workspaces.map((workspace) => {
+					const active = workspace._id === activeWorkspaceId;
+
+					return (
+						<button
+							key={workspace._id}
+							type="button"
+							onClick={() => router.push(`/w/${workspace._id}`)}
+							aria-label={`Open ${workspace.name}`}
+							aria-current={active ? "page" : undefined}
+							title={workspace.name}
+							className={cn(
+								"flex size-10 shrink-0 items-center justify-center rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
+								active
+									? "border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
+									: "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
+							)}
+						>
+							{workspaceInitials(workspace.name)}
+						</button>
+					);
+				})}
+
+				<button
+					type="button"
+					onClick={onCreateWorkspace}
+					aria-label="Create workspace"
+					title="Create workspace"
+					className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary"
+				>
+					<Plus width={18} height={18} />
+				</button>
+			</div>
 
 			<div className="relative mt-auto flex flex-col items-center gap-3">
 				{needsOnboarding && (
@@ -49,8 +103,9 @@ export function WorkspaceSidebar({ currentUser }: WorkspaceSidebarProps) {
 
 				<button
 					type="button"
-					aria-label="Settings"
-					title="Settings"
+					onClick={onOpenSettings}
+					aria-label="Workspace settings"
+					title="Workspace settings"
 					className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
 				>
 					<Settings2 width={18} height={18} />
@@ -115,6 +170,7 @@ export function WorkspaceSidebar({ currentUser }: WorkspaceSidebarProps) {
 					)}
 				</div>
 			</div>
+
 		</aside>
 	);
 }
