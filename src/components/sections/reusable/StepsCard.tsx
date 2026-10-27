@@ -1,22 +1,38 @@
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
 type StepsProps = {
 	id: number;
 	label: string;
 	description: string;
+	active?: boolean;
+	children?: ReactNode;
 };
 
-export default function StepsCard({id, label, description}: StepsProps) {
-	return <div className="flex flex-col gap-2">
-		<div className="flex gap-4 items-center text-muted mb-2">
-			<span className="text-4xl font-extrabold text-primary">0{id}</span>
-			<span className="block w-full h-0.5 bg-gradient-to-r from-muted to-transparent"/>
-		</div>
-		
-		<h3 className="text-primary font-extrabold">
-			{label}
-		</h3>
+export default function StepsCard({ id, label, description, active = false, children }: StepsProps) {
+	return (
+		<div
+			className={cn(
+				"flex flex-col justify-center border-t-2 border-light-foreground/15 py-10 transition-opacity duration-300 lg:min-h-[65vh] lg:py-16",
+				active ? "lg:opacity-100" : "lg:opacity-40",
+			)}
+		>
+			<span
+				className={cn(
+					"font-press-start text-3xl transition-colors duration-300 md:text-4xl",
+					active ? "text-primary" : "text-light-foreground/25",
+				)}
+			>
+				0{id}
+			</span>
 
-		<div className="text-xs md:text-sm">
-			{description}
+			<h3 className="mt-5 text-xl font-bold md:text-2xl">{label}</h3>
+
+			<p className="font-quera mt-3 max-w-sm text-sm leading-relaxed text-light-foreground/70 md:text-base">
+				{description}
+			</p>
+
+			{children && <div className="mt-8 lg:hidden">{children}</div>}
 		</div>
-	</div>
+	);
 }

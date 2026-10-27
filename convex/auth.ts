@@ -7,7 +7,7 @@ import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
 import { sendPasswordResetEmail, toSiteUrl } from "./email";
 
-const siteUrl = process.env.SITE_URL!;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
 
 export const authComponent = createClient<DataModel, typeof authSchema>(
 	components.betterAuth,

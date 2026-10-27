@@ -13,7 +13,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 		if (!session) {
 			router.replace("/signin");
 		} else if (session.user.onboarded) {
-			router.replace("/dashboard");
+			router.replace("/chat");
 		}
 	}, [session, isPending, router]);
 

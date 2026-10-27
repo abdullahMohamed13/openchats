@@ -10,6 +10,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
+  --color-light: var(--light);
+  --color-light-foreground: var(--light-foreground);
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
@@ -67,6 +70,9 @@
   --background: #101011;
   --foreground: #fdefc9;
 
+  --light: #fdefc9;
+  --light-foreground: #101011;
+
   --secondary: #5D8B63;
   --accent: #789C75;
 
@@ -84,6 +90,7 @@
   --warning: #f59e0b;
   --warning-foreground: #ffffff;
   --radius: 0.625rem;
+  --nav-height: 3.5rem;
 
   /* Neobrutalism shadow variables (colors reused from the app theme) */
   --box-shadow-x: 4px;

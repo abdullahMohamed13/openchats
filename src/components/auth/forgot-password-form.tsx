@@ -50,9 +50,9 @@ export default function ForgotPasswordPage() {
 	}
 
 	return (
-		<AuthCard title="Forgot Your Password?😏">
+		<AuthCard title="Forgot Your Password Buddy?😏">
 			<p className="text-sm text-muted-foreground text-center">
-				No worries, enter your email and we&apos;ll send you a link to reset it.
+				Agh, No worries ✋. Enter your email and we&apos;ll send you a link to reset it.
 			</p>
 
 			<form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
