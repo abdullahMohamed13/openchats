@@ -8,7 +8,7 @@ type AuthSetLoading = {
 }
 
 type SignInProps = AuthCredentials & AuthSetLoading & {
-	callbackURL: "/chat"
+	callbackURL: string
 };
 
 type SignUpProps = {
@@ -26,7 +26,7 @@ type SocialProvider = SocialProviders["provider"]
 type UsernameSignInProps = AuthSetLoading & {
 	username: string;
 	password: string;
-	callbackURL: "/chat";
+	callbackURL: string;
 };
 
 type ForgotPasswordProps = AuthSetLoading & {

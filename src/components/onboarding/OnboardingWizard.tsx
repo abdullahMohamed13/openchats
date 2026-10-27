@@ -28,6 +28,13 @@ import {
 import { User } from "pixelarticons/react";
 import arrowIcon from "@/assets/icons/arrow.webp";
 
+const PENDING_INVITE_KEY = "openchats:pendingInvite";
+
+function nextDestination(): string {
+	const pending = window.localStorage.getItem(PENDING_INVITE_KEY);
+	return pending ? `/invite/${pending}` : "/chat";
+}
+
 const ROLES = [
 	"Team lead",
 	"Team member",
@@ -175,12 +182,12 @@ export default function OnboardingWizard() {
 			return;
 		}
 
-		router.push("/chat");
+		router.push(nextDestination());
 	};
 
 	const handleSkip = async () => {
 		await authClient.updateUser({ onboarded: false });
-		router.push("/chat");
+		router.push(nextDestination());
 	};
 
 	const currentStep = STEPS[step];
