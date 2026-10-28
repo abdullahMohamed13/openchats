@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Event, StreamChat } from "stream-chat";
 import { DEFAULT_AVATAR, type ChannelSummary, type DirectMessageSummary } from "./types";
 
@@ -15,8 +15,9 @@ const EMPTY: Conversations = { channels: [], dms: [], loading: true };
 export function useConversations(
 	client: StreamChat | null,
 	workspaceId: string,
-): Conversations {
+): Conversations & { refresh: () => Promise<void> } {
 	const [state, setState] = useState<Conversations>(EMPTY);
+	const refreshRef = useRef<() => Promise<void>>(async () => {});
 
 	useEffect(() => {
 		if (!client?.userID) return;
@@ -69,11 +70,15 @@ export function useConversations(
 			setState({ channels, dms, loading: false });
 		};
 
-		const refresh = () => {
-			void load().catch(() => {
+		const refresh = async () => {
+			try {
+				await load();
+			} catch {
 				if (active) setState((current) => ({ ...current, loading: false }));
-			});
+			}
 		};
+
+		refreshRef.current = refresh;
 
 		const removeChannel = (event: Event) => {
 			if (!event.cid) return;
@@ -98,6 +103,9 @@ export function useConversations(
 
 		return () => {
 			active = false;
+			if (refreshRef.current === refresh) {
+				refreshRef.current = async () => {};
+			}
 			client.off("channel.created", refresh);
 			client.off("channel.updated", refresh);
 			client.off("channel.deleted", removeChannel);
@@ -109,5 +117,7 @@ export function useConversations(
 		};
 	}, [client, workspaceId]);
 
-	return state;
+	const refresh = useCallback(() => refreshRef.current(), []);
+
+	return { ...state, refresh };
 }

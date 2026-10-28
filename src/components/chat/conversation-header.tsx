@@ -8,6 +8,9 @@ interface ConversationHeaderProps {
   showMenuButton?: boolean;
   onToggleNav?: () => void;
   onOpenChannelSettings?: () => void;
+  onOpenSearch?: () => void;
+  onOpenNotifications?: () => void;
+  notificationCount?: number;
 }
 
 export function ConversationHeader({
@@ -17,6 +20,9 @@ export function ConversationHeader({
   showMenuButton,
   onToggleNav,
   onOpenChannelSettings,
+  onOpenSearch,
+  onOpenNotifications,
+  notificationCount = 0,
 }: ConversationHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
@@ -44,11 +50,17 @@ export function ConversationHeader({
             <Settings2 width={18} height={18} />
           </IconButton>
         )}
-        <IconButton label="Search this conversation">
+        <IconButton label="Search this conversation" onClick={onOpenSearch}>
           <Search width={18} height={18} />
         </IconButton>
-        <IconButton label="Notifications">
+        <IconButton label="Notifications" onClick={onOpenNotifications}>
           <Bell width={18} height={18} />
+          {notificationCount > 0 && (
+            <span
+              className="absolute right-1 top-1 size-1.5 rounded-full bg-danger"
+              aria-hidden
+            />
+          )}
         </IconButton>
       </div>
     </header>
@@ -70,7 +82,7 @@ function IconButton({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      className="relative flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       {children}
     </button>

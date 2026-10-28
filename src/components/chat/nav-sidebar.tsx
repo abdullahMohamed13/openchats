@@ -34,6 +34,7 @@ interface NavSidebarProps {
 	onSelectWorkspace: (id: string) => void;
 	onCreateWorkspace: () => void;
 	onCreateChannel: () => void;
+	onStartDirectMessage: () => void;
 	onOpenInvite: () => void;
 	onOpenSettings: () => void;
 	open?: boolean;
@@ -53,6 +54,7 @@ export function NavSidebar({
 	onSelectWorkspace,
 	onCreateWorkspace,
 	onCreateChannel,
+	onStartDirectMessage,
 	onOpenInvite,
 	onOpenSettings,
 	open,
@@ -225,24 +227,26 @@ export function NavSidebar({
 						open={dmsOpen}
 						onToggle={() => setDmsOpen((open) => !open)}
 						action={
-							badgeBroken ? (
-								<Plus
-									width={12}
-									height={12}
-									aria-label="Start a new direct message"
-									className="cursor-pointer hover:opacity-80"
-								/>
-							) : (
-								<Image
-									src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
-									alt="New direct message"
-									width={12}
-									height={12}
-									title="Start a new direct message"
-									onError={() => setBadgeBroken(true)}
-									className="pixelated cursor-pointer hover:opacity-80"
-								/>
-							)
+							<button
+								type="button"
+								aria-label="Start a new direct message"
+								title="Start a new direct message"
+								onClick={onStartDirectMessage}
+								className="flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+							>
+								{badgeBroken ? (
+									<Plus width={12} height={12} aria-hidden />
+								) : (
+									<Image
+										src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
+										alt=""
+										width={12}
+										height={12}
+										onError={() => setBadgeBroken(true)}
+										className="pixelated"
+									/>
+								)}
+							</button>
 						}
 					/>
 					{dmsOpen &&

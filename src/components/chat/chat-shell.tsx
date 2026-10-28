@@ -14,6 +14,8 @@ import { CreateChannelDialog } from "./create-channel-dialog";
 import { InviteDialog } from "./invite-dialog";
 import { WorkspaceSettingsDialog } from "./workspace-settings-dialog";
 import { ChannelSettingsDialog } from "./channel-settings-dialog";
+import { NewDirectMessageDialog } from "./new-direct-message-dialog";
+import { NotificationsDialog } from "./notifications-dialog";
 import { useConversations } from "./use-conversations";
 import { DEFAULT_AVATAR, type CurrentUser } from "./types";
 import { api } from "@/convex/_generated/api";
@@ -32,11 +34,16 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	});
 	const { client } = useChatContext();
 	const { data: session } = authClient.useSession();
-	const { channels, dms, loading } = useConversations(client, workspaceId);
+	const { channels, dms, loading, refresh } = useConversations(
+		client,
+		workspaceId,
+	);
 	const [selectedId, setSelectedId] = useState("");
 	const [navOpen, setNavOpen] = useState(false);
 	const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
 	const [createChannelOpen, setCreateChannelOpen] = useState(false);
+	const [newDmOpen, setNewDmOpen] = useState(false);
+	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
@@ -96,6 +103,9 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 		? dbChannels?.find((channel) => channel.streamId === activeChannel.id)
 		: undefined;
 	const canManageChannels = activeWorkspace.role !== "member";
+	const notificationCount =
+		channels.reduce((total, channel) => total + channel.unreadCount, 0) +
+		dms.reduce((total, dm) => total + dm.unreadCount, 0);
 
 	const resolved = activeChannel
 		? { title: `# ${activeChannel.name}`, subtitle: "Channel" }
@@ -111,6 +121,22 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const handleSelectWorkspace = (id: string) => {
 		setNavOpen(false);
 		if (id !== workspaceId) router.push(`/w/${id}`);
+	};
+
+	const handleOpenNotifications = () => {
+		setNotificationsOpen(true);
+		void refresh();
+	};
+
+	const handleMarkAllRead = async () => {
+		await client.markAllRead();
+		await refresh();
+	};
+
+	const handleDirectMessageCreated = async (channelId: string) => {
+		await refresh();
+		setSelectedId(channelId);
+		setNewDmOpen(false);
 	};
 
 	const emptyState = (
@@ -157,6 +183,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				onSelectWorkspace={handleSelectWorkspace}
 				onCreateWorkspace={() => setCreateWorkspaceOpen(true)}
 				onCreateChannel={() => setCreateChannelOpen(true)}
+				onStartDirectMessage={() => setNewDmOpen(true)}
 				onOpenInvite={() => setInviteOpen(true)}
 				onOpenSettings={() => setSettingsOpen(true)}
 				open={navOpen}
@@ -178,6 +205,8 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 							? () => setChannelSettingsOpen(true)
 							: undefined
 					}
+					onOpenNotifications={handleOpenNotifications}
+					notificationCount={notificationCount}
 				/>
 			) : (
 				emptyState
@@ -196,6 +225,22 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 						setSelectedId(channelId);
 						setCreateChannelOpen(false);
 					}}
+				/>
+			)}
+			{newDmOpen && (
+				<NewDirectMessageDialog
+					workspaceId={workspaceId}
+					onClose={() => setNewDmOpen(false)}
+					onCreated={handleDirectMessageCreated}
+				/>
+			)}
+			{notificationsOpen && (
+				<NotificationsDialog
+					channels={channels}
+					dms={dms}
+					onSelect={handleSelect}
+					onMarkAllRead={handleMarkAllRead}
+					onClose={() => setNotificationsOpen(false)}
 				/>
 			)}
 			{inviteOpen && (
