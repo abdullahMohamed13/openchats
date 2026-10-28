@@ -12,6 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { BrutalButton } from "@/components/ui/brutal-button";
 import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
+import { Skeleton } from "@/components/ui/8bit/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
 import {
@@ -262,9 +263,11 @@ export function WorkspaceSettingsDialog({
 							Members
 						</h3>
 						{members === undefined ? (
-							<p className="mt-3 text-sm text-muted-foreground">
-								Loading members…
-							</p>
+							<div className="mt-3 flex flex-col gap-2">
+								{Array.from({ length: 3 }).map((_, index) => (
+									<Skeleton key={index} className="h-12 w-full" />
+								))}
+							</div>
 						) : (
 							<ul className="mt-3 flex flex-col divide-y divide-border border-y border-border">
 								{members.map((member) => (
@@ -333,7 +336,7 @@ export function WorkspaceSettingsDialog({
 												disabled={removingId !== null}
 												aria-label={`Remove ${member.name}`}
 												title={`Remove ${member.name}`}
-												className="flex size-8 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-danger disabled:opacity-50"
+												className="flex size-8 shrink-0 items-center justify-center text-danger transition-colors hover:text-danger disabled:opacity-50"
 											>
 												{removingId === member.userId ? (
 													<span className="text-[10px]">…</span>
@@ -394,7 +397,7 @@ export function WorkspaceSettingsDialog({
 									? "Deleting…"
 									: confirmDelete
 										? "Click again to delete forever"
-										: "Delete workspace"}
+										: "Delete forever"}
 							</Button>
 						</section>
 					)}
