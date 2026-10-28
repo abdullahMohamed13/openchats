@@ -204,6 +204,26 @@ export async function deleteStreamChannel(
 	}
 }
 
+export async function updateStreamChannelName(
+	auth: StreamServerAuth,
+	channelId: string,
+	name: string,
+): Promise<void> {
+	const response = await fetch(channelUrl(auth, channelId), {
+		method: "PATCH",
+		headers: streamHeaders(auth.serverToken),
+		body: JSON.stringify({ set: { name } }),
+	});
+	if (response.status === 404) {
+		throw new Error("This channel no longer exists");
+	}
+	if (!response.ok) {
+		throw new Error(
+			`Failed to rename channel ${channelId} (${response.status}): ${await response.text()}`,
+		);
+	}
+}
+
 export const generateStreamToken = action({
 	args: {},
 	handler: async (ctx) => {

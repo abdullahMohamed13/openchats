@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
+import type { Event } from "stream-chat";
 import { useChatContext } from "stream-chat-react";
 import { Menu } from "pixelarticons/react";
 import { WorkspaceSidebar } from "./workspace-sidebar";
@@ -12,6 +13,7 @@ import { CreateWorkspaceDialog } from "./create-workspace-dialog";
 import { CreateChannelDialog } from "./create-channel-dialog";
 import { InviteDialog } from "./invite-dialog";
 import { WorkspaceSettingsDialog } from "./workspace-settings-dialog";
+import { ChannelSettingsDialog } from "./channel-settings-dialog";
 import { useConversations } from "./use-conversations";
 import { DEFAULT_AVATAR, type CurrentUser } from "./types";
 import { api } from "@/convex/_generated/api";
@@ -25,6 +27,9 @@ interface ChatShellProps {
 export function ChatShell({ workspaceId }: ChatShellProps) {
 	const router = useRouter();
 	const workspaces = useQuery(api.workspaces.listMyWorkspaces);
+	const dbChannels = useQuery(api.channels.listWorkspaceChannels, {
+		workspaceId,
+	});
 	const { client } = useChatContext();
 	const { data: session } = authClient.useSession();
 	const { channels, dms, loading } = useConversations(client, workspaceId);
@@ -34,6 +39,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const [createChannelOpen, setCreateChannelOpen] = useState(false);
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
 
 	const currentUser = useMemo<CurrentUser>(() => {
 		const user = session?.user;
@@ -55,6 +61,23 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 		}
 	}, [workspaces, activeWorkspace, router]);
 
+	useEffect(() => {
+		const handleChannelRemoved = (event: Event) => {
+			if (!event.cid) return;
+			const channelId = event.cid.split(":").slice(1).join(":");
+			setSelectedId((current) => (current === channelId ? "" : current));
+			setChannelSettingsOpen(false);
+		};
+
+		client.on("channel.deleted", handleChannelRemoved);
+		client.on("notification.removed_from_channel", handleChannelRemoved);
+
+		return () => {
+			client.off("channel.deleted", handleChannelRemoved);
+			client.off("notification.removed_from_channel", handleChannelRemoved);
+		};
+	}, [client]);
+
 	if (workspaces === undefined) {
 		return (
 			<div className="flex h-screen w-full items-center justify-center bg-background text-sm text-muted-foreground">
@@ -69,6 +92,10 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 
 	const activeChannel = channels.find((channel) => channel.id === activeId);
 	const activeDm = dms.find((dm) => dm.id === activeId);
+	const activeChannelRow = activeChannel
+		? dbChannels?.find((channel) => channel.streamId === activeChannel.id)
+		: undefined;
+	const canManageChannels = activeWorkspace.role !== "member";
 
 	const resolved = activeChannel
 		? { title: `# ${activeChannel.name}`, subtitle: "Channel" }
@@ -146,6 +173,11 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					subtitle={resolved.subtitle}
 					showMenuButton
 					onToggleNav={() => setNavOpen((open) => !open)}
+					onOpenChannelSettings={
+						activeChannelRow && canManageChannels
+							? () => setChannelSettingsOpen(true)
+							: undefined
+					}
 				/>
 			) : (
 				emptyState
@@ -181,6 +213,18 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					onInvite={() => {
 						setSettingsOpen(false);
 						setInviteOpen(true);
+					}}
+				/>
+			)}
+			{channelSettingsOpen && activeChannel && activeChannelRow && (
+				<ChannelSettingsDialog
+					channelId={activeChannelRow._id}
+					channelName={activeChannel.name}
+					isGeneral={activeChannelRow.name === "general"}
+					onClose={() => setChannelSettingsOpen(false)}
+					onDeleted={() => {
+						setSelectedId("");
+						setChannelSettingsOpen(false);
 					}}
 				/>
 			)}

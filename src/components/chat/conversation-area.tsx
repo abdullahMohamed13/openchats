@@ -11,6 +11,7 @@ interface ConversationAreaProps {
   unreadCount?: number;
   showMenuButton?: boolean;
   onToggleNav?: () => void;
+  onOpenChannelSettings?: () => void;
 }
 
 export function ConversationArea({
@@ -20,6 +21,7 @@ export function ConversationArea({
   unreadCount,
   showMenuButton,
   onToggleNav,
+  onOpenChannelSettings,
 }: ConversationAreaProps) {
   const { client } = useChatContext();
 
@@ -38,6 +40,7 @@ export function ConversationArea({
             unreadCount={unreadCount}
             showMenuButton={showMenuButton}
             onToggleNav={onToggleNav}
+            onOpenChannelSettings={onOpenChannelSettings}
           />
           <MessageList />
           <MessageComposer />

@@ -1,4 +1,4 @@
-import { Menu, Search, Bell } from "pixelarticons/react";
+import { Menu, Search, Bell, Settings2 } from "pixelarticons/react";
 import { UnreadBadge } from "./unread-badge";
 
 interface ConversationHeaderProps {
@@ -7,6 +7,7 @@ interface ConversationHeaderProps {
   unreadCount?: number;
   showMenuButton?: boolean;
   onToggleNav?: () => void;
+  onOpenChannelSettings?: () => void;
 }
 
 export function ConversationHeader({
@@ -15,6 +16,7 @@ export function ConversationHeader({
   unreadCount,
   showMenuButton,
   onToggleNav,
+  onOpenChannelSettings,
 }: ConversationHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
@@ -37,6 +39,11 @@ export function ConversationHeader({
       <p className="hidden min-w-0 flex-1 truncate text-sm text-muted-foreground sm:block">{subtitle}</p>
 
       <div className="ml-auto flex items-center gap-1">
+        {onOpenChannelSettings && (
+          <IconButton label="Channel settings" onClick={onOpenChannelSettings}>
+            <Settings2 width={18} height={18} />
+          </IconButton>
+        )}
         <IconButton label="Search this conversation">
           <Search width={18} height={18} />
         </IconButton>
@@ -48,12 +55,21 @@ export function ConversationHeader({
   );
 }
 
-function IconButton({ label, children }: { label: string; children: React.ReactNode }) {
+function IconButton({
+  label,
+  children,
+  onClick,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
+      onClick={onClick}
       className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       {children}
