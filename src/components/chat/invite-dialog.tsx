@@ -75,6 +75,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 
 	const handleCopy = async () => {
 		if (!inviteUrl) return;
+		setError(null);
 		try {
 			await navigator.clipboard.writeText(inviteUrl);
 			setCopied(true);
@@ -88,6 +89,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 		inviteId: Id<"workspaceInvites">,
 		token: string,
 	) => {
+		setError(null);
 		try {
 			await navigator.clipboard.writeText(
 				`${window.location.origin}/invite/${token}`,
@@ -99,7 +101,10 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 		}
 	};
 
-	const handleRevoke = async (inviteId: Id<"workspaceInvites">) => {
+	const handleRevoke = async (
+		inviteId: Id<"workspaceInvites">,
+		token: string | null,
+	) => {
 		if (confirmRevokeId !== inviteId) {
 			setConfirmRevokeId(inviteId);
 			return;
@@ -110,6 +115,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 		try {
 			await revokeInvite({ workspaceId, inviteId });
 			setConfirmRevokeId(null);
+			if (token && token === linkToken) setLinkToken(null);
 		} catch (cause) {
 			setError(getErrorMessage(cause, "Could not revoke the invite."));
 		} finally {
@@ -368,7 +374,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 									)}
 									<button
 										type="button"
-										onClick={() => void handleRevoke(invite._id)}
+										onClick={() => void handleRevoke(invite._id, invite.token)}
 										disabled={revokingId !== null}
 										className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-danger transition-colors hover:opacity-80 disabled:opacity-50"
 									>
