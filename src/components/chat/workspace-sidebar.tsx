@@ -7,6 +7,7 @@ import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "./sign-out-button";
+import { WorkspaceAvatar } from "./workspace-avatar";
 import type { CurrentUser, WorkspaceSummary } from "./types";
 
 interface WorkspaceSidebarProps {
@@ -15,12 +16,6 @@ interface WorkspaceSidebarProps {
 	activeWorkspaceId: string;
 	onCreateWorkspace: () => void;
 	onOpenSettings: () => void;
-}
-
-function workspaceInitials(name: string): string {
-	const [first = "", second = ""] = name.trim().split(/\s+/);
-	if (second) return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
-	return name.slice(0, 2).toUpperCase();
 }
 
 export function WorkspaceSidebar({
@@ -62,13 +57,17 @@ export function WorkspaceSidebar({
 							aria-current={active ? "page" : undefined}
 							title={workspace.name}
 							className={cn(
-								"flex size-10 shrink-0 items-center justify-center rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
+								"flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
 								active
 									? "border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
 									: "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
 							)}
 						>
-							{workspaceInitials(workspace.name)}
+							<WorkspaceAvatar
+								name={workspace.name}
+								imageUrl={workspace.imageUrl}
+								className="size-full rounded-[6px]"
+							/>
 						</button>
 					);
 				})}

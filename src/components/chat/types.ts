@@ -29,6 +29,7 @@ export interface WorkspaceSummary {
 	_id: string;
 	name: string;
 	slug: string;
+	imageUrl: string | null;
 	role: WorkspaceRole;
 	joinedAt: number;
 	createdAt: number;

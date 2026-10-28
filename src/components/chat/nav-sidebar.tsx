@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import "@/styles/retro.css";
 import { ChannelItem } from "./channel-item";
 import { DMItem } from "./dm-item";
+import { WorkspaceAvatar } from "./workspace-avatar";
 import type {
 	ChannelSummary,
 	DirectMessageSummary,
@@ -23,6 +24,7 @@ import type {
 
 interface NavSidebarProps {
 	workspaceName: string;
+	workspaceImageUrl: string | null;
 	workspaces: WorkspaceSummary[];
 	activeWorkspaceId: string;
 	canManageWorkspace: boolean;
@@ -43,6 +45,7 @@ interface NavSidebarProps {
 
 export function NavSidebar({
 	workspaceName,
+	workspaceImageUrl,
 	workspaces,
 	activeWorkspaceId,
 	canManageWorkspace,
@@ -92,9 +95,15 @@ export function NavSidebar({
 							onClick={() => setMenuOpen((value) => !value)}
 							aria-expanded={menuOpen}
 							aria-haspopup="menu"
-							className="flex min-w-0 items-center gap-1.5 text-foreground"
+							className="flex w-full min-w-0 items-center gap-1.5 text-foreground"
 						>
-							<h2 className="truncate font-press-start text-[11px] uppercase">{workspaceName}</h2>
+							<WorkspaceAvatar
+								name={workspaceName}
+								imageUrl={workspaceImageUrl}
+								className="size-6 shrink-0 rounded border border-border"
+								initialsClassName="text-[8px]"
+							/>
+							<h2 className="min-w-0 truncate font-press-start text-[11px] uppercase">{workspaceName}</h2>
 							<ChevronDown width={14} height={14} className="shrink-0 text-muted-foreground" aria-hidden />
 						</button>
 
@@ -125,6 +134,12 @@ export function NavSidebar({
 												}}
 												className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 											>
+												<WorkspaceAvatar
+													name={workspace.name}
+													imageUrl={workspace.imageUrl}
+													className="size-5 shrink-0 rounded border border-border"
+													initialsClassName="text-[7px]"
+												/>
 												<span className="min-w-0 flex-1 truncate">{workspace.name}</span>
 												{workspace._id === activeWorkspaceId && (
 													<Check width={14} height={14} className="shrink-0 text-primary" aria-hidden />

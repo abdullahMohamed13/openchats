@@ -6,10 +6,12 @@ import {
 	action,
 	internalMutation,
 	internalQuery,
+	mutation,
 	query,
 } from "./_generated/server";
 import {
 	getAuthUserId,
+	requireAdmin,
 	requireAdminForAction,
 	requireMembership,
 	requireMembershipForAction,
@@ -29,10 +31,13 @@ type WorkspaceSummary = {
 	_id: Id<"workspaces">;
 	name: string;
 	slug: string;
+	imageUrl: string | null;
 	role: "owner" | "admin" | "member";
 	joinedAt: number;
 	createdAt: number;
 };
+
+const MAX_WORKSPACE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type MemberProfile = {
 	userId: string;
@@ -81,6 +86,9 @@ export const listMyWorkspaces = query({
 					_id: workspace._id,
 					name: workspace.name,
 					slug: workspace.slug,
+					imageUrl: workspace.imageId
+						? await ctx.storage.getUrl(workspace.imageId)
+						: null,
 					role: membership.role,
 					joinedAt: membership.joinedAt,
 					createdAt: workspace.createdAt,
@@ -220,6 +228,11 @@ export const deleteWorkspaceData = internalMutation({
 			await ctx.db.delete(member._id);
 		}
 
+		const workspace = await ctx.db.get(workspaceId);
+		if (workspace?.imageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
 		await ctx.db.delete(workspaceId);
 	},
 });
@@ -350,6 +363,78 @@ export const renameWorkspace = action({
 		});
 
 		return { name: trimmedName };
+	},
+});
+
+export const generateWorkspaceImageUploadUrl = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+	},
+	handler: async (ctx, { workspaceId }): Promise<string> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+		return await ctx.storage.generateUploadUrl();
+	},
+});
+
+export const setWorkspaceImage = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+		storageId: v.id("_storage"),
+	},
+	handler: async (
+		ctx,
+		{ workspaceId, storageId },
+	): Promise<{ imageUrl: string | null }> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) {
+			throw new Error("Workspace not found");
+		}
+
+		const metadata = await ctx.db.system.get("_storage", storageId);
+		if (!metadata) {
+			throw new Error("The uploaded image could not be found");
+		}
+		if (!metadata.contentType?.startsWith("image/")) {
+			await ctx.storage.delete(storageId);
+			throw new Error("Workspace images must be image files");
+		}
+		if (metadata.size > MAX_WORKSPACE_IMAGE_BYTES) {
+			await ctx.storage.delete(storageId);
+			throw new Error("Workspace images must be 5 MB or smaller");
+		}
+
+		await ctx.db.patch(workspaceId, { imageId: storageId });
+		if (workspace.imageId && workspace.imageId !== storageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
+		return { imageUrl: await ctx.storage.getUrl(storageId) };
+	},
+});
+
+export const removeWorkspaceImage = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+	},
+	handler: async (ctx, { workspaceId }): Promise<{ ok: true }> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) {
+			throw new Error("Workspace not found");
+		}
+
+		await ctx.db.patch(workspaceId, { imageId: undefined });
+		if (workspace.imageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
+		return { ok: true };
 	},
 });
 

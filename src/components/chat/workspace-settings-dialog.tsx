@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { Logout, Trash, UserMinus, UserPlus } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
@@ -15,15 +15,19 @@ import { Input } from "@/components/ui/8bit/input";
 import { Skeleton } from "@/components/ui/8bit/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
+import { WorkspaceAvatar } from "./workspace-avatar";
 import {
 	DEFAULT_AVATAR,
 	type WorkspaceMember,
 	type WorkspaceRole,
 } from "./types";
 
+const MAX_WORKSPACE_IMAGE_BYTES = 5 * 1024 * 1024;
+
 interface WorkspaceSettingsDialogProps {
 	workspaceId: Id<"workspaces">;
 	workspaceName: string;
+	workspaceImageUrl: string | null;
 	role: WorkspaceRole;
 	onClose: () => void;
 	onInvite: () => void;
@@ -38,6 +42,7 @@ function roleLabel(role: WorkspaceRole): string {
 export function WorkspaceSettingsDialog({
 	workspaceId,
 	workspaceName,
+	workspaceImageUrl,
 	role,
 	onClose,
 	onInvite,
@@ -50,13 +55,22 @@ export function WorkspaceSettingsDialog({
 	const removeMember = useAction(api.workspaces.removeMember);
 	const leaveWorkspace = useAction(api.workspaces.leaveWorkspace);
 	const deleteWorkspace = useAction(api.workspaces.deleteWorkspace);
+	const generateImageUploadUrl = useMutation(
+		api.workspaces.generateWorkspaceImageUploadUrl,
+	);
+	const setWorkspaceImage = useMutation(api.workspaces.setWorkspaceImage);
+	const removeWorkspaceImage = useMutation(api.workspaces.removeWorkspaceImage);
 
 	const canManage = role === "owner" || role === "admin";
 	const isOwner = role === "owner";
 
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [name, setName] = useState(workspaceName);
 	const [savingName, setSavingName] = useState(false);
 	const [nameSaved, setNameSaved] = useState(false);
+	const [uploadingImage, setUploadingImage] = useState(false);
+	const [removingImage, setRemovingImage] = useState(false);
+	const [imageSaved, setImageSaved] = useState(false);
 	const [removingId, setRemovingId] = useState<string | null>(null);
 	const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
 	const [confirmLeave, setConfirmLeave] = useState(false);
@@ -67,6 +81,8 @@ export function WorkspaceSettingsDialog({
 
 	const busy =
 		savingName ||
+		uploadingImage ||
+		removingImage ||
 		leaving ||
 		deleting ||
 		removingId !== null ||
@@ -102,6 +118,61 @@ export function WorkspaceSettingsDialog({
 			setError(getErrorMessage(cause, "Could not rename workspace."));
 		} finally {
 			setSavingName(false);
+		}
+	};
+
+	const handleImageSelected = async (
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (!file) return;
+
+		if (!file.type.startsWith("image/")) {
+			setError("Choose an image file.");
+			return;
+		}
+		if (file.size > MAX_WORKSPACE_IMAGE_BYTES) {
+			setError("Workspace images must be 5 MB or smaller.");
+			return;
+		}
+
+		setUploadingImage(true);
+		setImageSaved(false);
+		setError(null);
+		try {
+			const uploadUrl = await generateImageUploadUrl({ workspaceId });
+			const response = await fetch(uploadUrl, {
+				method: "POST",
+				headers: { "Content-Type": file.type },
+				body: file,
+			});
+			if (!response.ok) {
+				throw new Error("Could not upload the image.");
+			}
+			const { storageId } = (await response.json()) as {
+				storageId: Id<"_storage">;
+			};
+			await setWorkspaceImage({ workspaceId, storageId });
+			setImageSaved(true);
+		} catch (cause) {
+			setError(getErrorMessage(cause, "Could not update workspace image."));
+		} finally {
+			setUploadingImage(false);
+		}
+	};
+
+	const handleRemoveImage = async () => {
+		setRemovingImage(true);
+		setImageSaved(false);
+		setError(null);
+		try {
+			await removeWorkspaceImage({ workspaceId });
+			setImageSaved(true);
+		} catch (cause) {
+			setError(getErrorMessage(cause, "Could not remove workspace image."));
+		} finally {
+			setRemovingImage(false);
 		}
 	};
 
@@ -223,39 +294,99 @@ export function WorkspaceSettingsDialog({
 
 				<div className="flex-1 overflow-y-auto p-5">
 					{canManage && (
-						<section>
-							<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-								Name
-							</h3>
-							<form
-								onSubmit={handleRename}
-								className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center"
-							>
-								<Input
-									value={name}
-									onChange={(event) => {
-										setName(event.target.value);
-										setNameSaved(false);
-									}}
-									disabled={savingName}
-									maxLength={50}
-									aria-label="Workspace name"
-									className="h-11 flex-1"
-								/>
-								<Button
-									type="submit"
-									disabled={!canRename}
-									className="shrink-0 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
-								>
-									{savingName ? "Saving…" : "Save"}
-								</Button>
-							</form>
-							{nameSaved && (
-								<p role="status" className="mt-2 text-xs text-success">
-									Workspace renamed.
+						<>
+							<section>
+								<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+									Image
+								</h3>
+								<div className="mt-2 flex flex-wrap items-center gap-4">
+									<WorkspaceAvatar
+										name={workspaceName}
+										imageUrl={workspaceImageUrl}
+										className="size-16 rounded-none border-2 border-foreground bg-muted shadow-[3px_3px_0px_var(--foreground)]"
+										initialsClassName="text-sm"
+									/>
+									<div className="flex flex-wrap items-center gap-2">
+										<input
+											ref={fileInputRef}
+											id="workspace-image"
+											name="workspace-image"
+											type="file"
+											accept="image/*"
+											aria-label="Workspace image"
+											className="sr-only"
+											disabled={busy}
+											onChange={(event) => void handleImageSelected(event)}
+										/>
+										<Button
+											type="button"
+											onClick={() => fileInputRef.current?.click()}
+											disabled={busy}
+											className="px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{uploadingImage
+												? "Uploading…"
+												: workspaceImageUrl
+													? "Change image"
+													: "Upload image"}
+										</Button>
+										{workspaceImageUrl && (
+											<Button
+												type="button"
+												variant="destructive"
+												onClick={() => void handleRemoveImage()}
+												disabled={busy}
+												className="px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												{removingImage ? "Removing…" : "Remove"}
+											</Button>
+										)}
+									</div>
+								</div>
+								<p className="mt-2 text-xs text-muted-foreground">
+									PNG, JPG, GIF or WebP, up to 5 MB.
 								</p>
-							)}
-						</section>
+								{imageSaved && (
+									<p role="status" className="mt-2 text-xs text-success">
+										Workspace image updated.
+									</p>
+								)}
+							</section>
+
+							<section className="mt-6">
+								<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+									Name
+								</h3>
+								<form
+									onSubmit={handleRename}
+									className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center"
+								>
+									<Input
+										value={name}
+										onChange={(event) => {
+											setName(event.target.value);
+											setNameSaved(false);
+										}}
+										disabled={savingName}
+										maxLength={50}
+										aria-label="Workspace name"
+										className="h-11 flex-1"
+									/>
+									<Button
+										type="submit"
+										disabled={!canRename}
+										className="shrink-0 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										{savingName ? "Saving…" : "Save"}
+									</Button>
+								</form>
+								{nameSaved && (
+									<p role="status" className="mt-2 text-xs text-success">
+										Workspace renamed.
+									</p>
+								)}
+							</section>
+						</>
 					)}
 
 					<section className={cn(canManage && "mt-6")}>

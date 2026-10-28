@@ -15,6 +15,7 @@ export default defineSchema({
 		name: v.string(),
 		slug: v.string(),
 		ownerId: v.string(),
+		imageId: v.optional(v.id("_storage")),
 		createdAt: v.number(),
 	})
 		.index("slug", ["slug"])

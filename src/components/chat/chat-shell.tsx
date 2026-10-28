@@ -172,6 +172,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 
 			<NavSidebar
 				workspaceName={activeWorkspace.name}
+				workspaceImageUrl={activeWorkspace.imageUrl}
 				workspaces={workspaces}
 				activeWorkspaceId={workspaceId}
 				canManageWorkspace={activeWorkspace.role !== "member"}
@@ -253,6 +254,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				<WorkspaceSettingsDialog
 					workspaceId={workspaceId}
 					workspaceName={activeWorkspace.name}
+					workspaceImageUrl={activeWorkspace.imageUrl}
 					role={activeWorkspace.role}
 					onClose={() => setSettingsOpen(false)}
 					onInvite={() => {
