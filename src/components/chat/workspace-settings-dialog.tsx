@@ -200,23 +200,18 @@ export function WorkspaceSettingsDialog({
 				transition={{ duration: 0.18, ease: "easeOut" }}
 				className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col border-2 border-foreground bg-background shadow-[6px_6px_0px_var(--foreground)]"
 			>
-				<header className="flex items-start justify-between gap-3 border-b border-border p-5">
-					<div>
-						<h2
-							id="workspace-settings-title"
-							className="font-press-start text-sm uppercase text-foreground"
-						>
-							Workspace settings
-						</h2>
-						<p className="mt-2 text-sm text-muted-foreground">
-							{workspaceName} · You are {roleLabel(role).toLowerCase()}
-						</p>
-					</div>
+				<header className="flex items-center justify-between gap-3 border-b border-border px-5 py-5">
+					<h2
+						id="workspace-settings-title"
+						className="font-press-start text-sm uppercase text-foreground"
+					>
+						Workspace settings
+					</h2>
 					{canManage && (
 						<BrutalButton
 							type="button"
 							onClick={onInvite}
-							className="shrink-0 px-3 py-2 text-xs uppercase"
+							className="shrink-0 px-3 py-2 bg-primary! text-xs uppercase"
 						>
 							<UserPlus width={14} height={14} className="mr-1.5" />
 							Invite
@@ -381,7 +376,7 @@ export function WorkspaceSettingsDialog({
 					)}
 
 					{isOwner && (
-						<section className="mt-6 border-t border-border pt-5">
+						<section className="mt-6">
 							<h3 className="text-xs font-semibold uppercase tracking-wide text-danger">
 								Delete workspace
 							</h3>
