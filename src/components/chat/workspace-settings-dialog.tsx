@@ -229,7 +229,7 @@ export function WorkspaceSettingsDialog({
 							</h3>
 							<form
 								onSubmit={handleRename}
-								className="mt-2 flex flex-col gap-2 sm:flex-row"
+								className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center"
 							>
 								<Input
 									value={name}
