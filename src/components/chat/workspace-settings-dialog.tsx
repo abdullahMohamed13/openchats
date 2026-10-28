@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
 import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
@@ -240,13 +241,13 @@ export function WorkspaceSettingsDialog({
 									aria-label="Workspace name"
 									className="h-11 flex-1"
 								/>
-								<BrutalButton
+								<Button
 									type="submit"
 									disabled={!canRename}
 									className="shrink-0 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									{savingName ? "Saving…" : "Save"}
-								</BrutalButton>
+								</Button>
 							</form>
 							{nameSaved && (
 								<p role="status" className="mt-2 text-xs text-success">
@@ -355,14 +356,11 @@ export function WorkspaceSettingsDialog({
 							<p className="mt-2 text-xs text-muted-foreground">
 								You&apos;ll lose access to its channels and messages.
 							</p>
-							<BrutalButton
+							<Button
 								type="button"
 								onClick={() => void handleLeave()}
 								disabled={busy}
-								color="var(--danger)"
-								textColor="var(--foreground)"
-								borderColor="var(--border)"
-								shadowColor="var(--border)"
+								variant="destructive"
 								className="mt-3 px-4 py-2 text-xs uppercase disabled:opacity-50"
 							>
 								<Logout width={14} height={14} className="mr-1.5" />
@@ -371,7 +369,7 @@ export function WorkspaceSettingsDialog({
 									: confirmLeave
 										? "Click again to leave"
 										: "Leave workspace"}
-							</BrutalButton>
+							</Button>
 						</section>
 					)}
 
@@ -384,14 +382,11 @@ export function WorkspaceSettingsDialog({
 								This permanently deletes the workspace, its channels, and
 								invites for everyone.
 							</p>
-							<BrutalButton
+							<Button
 								type="button"
 								onClick={() => void handleDelete()}
 								disabled={busy}
-								color="var(--danger)"
-								textColor="var(--foreground)"
-								borderColor="var(--danger)"
-								shadowColor="var(--danger)"
+								variant="destructive"
 								className="mt-3 px-4 py-2 text-xs uppercase disabled:opacity-50"
 							>
 								<Trash width={14} height={14} className="mr-1.5" />
@@ -400,7 +395,7 @@ export function WorkspaceSettingsDialog({
 									: confirmDelete
 										? "Click again to delete forever"
 										: "Delete workspace"}
-							</BrutalButton>
+							</Button>
 						</section>
 					)}
 
@@ -412,14 +407,14 @@ export function WorkspaceSettingsDialog({
 				</div>
 
 				<footer className="flex justify-end border-t border-border p-4">
-					<BrutalButton
+					<Button
 						type="button"
 						onClick={onClose}
 						disabled={busy}
 						className="px-4 py-2 text-xs uppercase disabled:opacity-50"
 					>
 						Done
-					</BrutalButton>
+					</Button>
 				</footer>
 			</motion.div>
 		</div>
