@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { AtSign, Check, Copy, Link, Mail } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
@@ -28,6 +28,8 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 	const createLinkInvite = useMutation(api.invites.createLinkInvite);
 	const inviteByUsername = useAction(api.invites.inviteByUsername);
 	const inviteByEmail = useAction(api.invites.inviteByEmail);
+	const invites = useQuery(api.invites.listWorkspaceInvites, { workspaceId });
+	const revokeInvite = useMutation(api.invites.revokeInvite);
 
 	const [tab, setTab] = useState<Tab>("link");
 	const [linkToken, setLinkToken] = useState<string | null>(null);
@@ -38,18 +40,25 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
+	const [revokingId, setRevokingId] = useState<string | null>(null);
+	const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
+	const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
+
+	const busy = saving || linkLoading || revokingId !== null;
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape" && !saving) onClose();
+			if (event.key === "Escape" && !busy) onClose();
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [saving, onClose]);
+	}, [busy, onClose]);
 
 	const inviteUrl = linkToken
 		? `${window.location.origin}/invite/${linkToken}`
 		: "";
+	const activeInvites =
+		invites?.filter((invite) => invite.status === "active") ?? [];
 
 	const handleGenerateLink = async () => {
 		setLinkLoading(true);
@@ -72,6 +81,39 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 			window.setTimeout(() => setCopied(false), 2000);
 		} catch {
 			setError("Could not copy. Select the link and copy it manually.");
+		}
+	};
+
+	const handleCopyInvite = async (
+		inviteId: Id<"workspaceInvites">,
+		token: string,
+	) => {
+		try {
+			await navigator.clipboard.writeText(
+				`${window.location.origin}/invite/${token}`,
+			);
+			setCopiedInviteId(inviteId);
+			window.setTimeout(() => setCopiedInviteId(null), 2000);
+		} catch {
+			setError("Could not copy. Select the link and copy it manually.");
+		}
+	};
+
+	const handleRevoke = async (inviteId: Id<"workspaceInvites">) => {
+		if (confirmRevokeId !== inviteId) {
+			setConfirmRevokeId(inviteId);
+			return;
+		}
+
+		setRevokingId(inviteId);
+		setError(null);
+		try {
+			await revokeInvite({ workspaceId, inviteId });
+			setConfirmRevokeId(null);
+		} catch (cause) {
+			setError(getErrorMessage(cause, "Could not revoke the invite."));
+		} finally {
+			setRevokingId(null);
 		}
 	};
 
@@ -119,7 +161,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 			<button
 				type="button"
 				aria-label="Close invite dialog"
-				onClick={saving ? undefined : onClose}
+				onClick={busy ? undefined : onClose}
 				className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-[2px]"
 			/>
 			<motion.div
@@ -129,7 +171,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 				initial={{ opacity: 0, y: 16, scale: 0.96 }}
 				animate={{ opacity: 1, y: 0, scale: 1 }}
 				transition={{ duration: 0.18, ease: "easeOut" }}
-				className="relative z-10 w-full max-w-md border-2 border-foreground bg-background p-6 shadow-[6px_6px_0px_var(--foreground)]"
+				className="relative z-10 max-h-[85vh] w-full max-w-md overflow-y-auto border-2 border-foreground bg-background p-6 shadow-[6px_6px_0px_var(--foreground)]"
 			>
 				<h2
 					id="invite-dialog-title"
@@ -187,6 +229,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 										<BrutalButton
 											type="button"
 											onClick={handleCopy}
+											aria-label={copied ? "Copied invite link" : "Copy invite link"}
 											className="shrink-0 px-3 py-2 text-xs uppercase"
 										>
 											{copied ? (
@@ -282,6 +325,65 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 					)}
 				</div>
 
+				<section className="mt-6 border-t border-border pt-4">
+					<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+						Active invites
+					</h3>
+					{invites === undefined ? (
+						<p className="mt-2 text-xs text-muted-foreground">
+							Loading invites…
+						</p>
+					) : activeInvites.length === 0 ? (
+						<p className="mt-2 text-xs text-muted-foreground">
+							No active invites.
+						</p>
+					) : (
+						<ul className="mt-3 flex max-h-52 flex-col divide-y divide-border overflow-y-auto border-y border-border">
+							{activeInvites.map((invite) => (
+								<li
+									key={invite._id}
+									className="flex items-center gap-2 py-2"
+								>
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm text-foreground">
+											{invite.kind === "email"
+												? invite.email
+												: "Reusable link"}
+										</p>
+										<p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Expires{" "}
+											{new Date(invite.expiresAt).toLocaleDateString()}
+										</p>
+									</div>
+									{invite.token && (
+										<button
+											type="button"
+											onClick={() =>
+												void handleCopyInvite(invite._id, invite.token!)
+											}
+											className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
+										>
+											{copiedInviteId === invite._id ? "Copied" : "Copy"}
+										</button>
+									)}
+									<button
+										type="button"
+										onClick={() => void handleRevoke(invite._id)}
+										disabled={revokingId !== null}
+										className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-danger transition-colors hover:opacity-80 disabled:opacity-50"
+									>
+										{revokingId === invite._id
+											? "…"
+											: confirmRevokeId === invite._id
+												? "Confirm"
+												: "Revoke"}
+									</button>
+								</li>
+							))}
+						</ul>
+					)}
+				</section>
+
 				{error && (
 					<p role="alert" className="mt-4 text-xs text-danger">
 						{error}
@@ -297,7 +399,7 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 					<BrutalButton
 						type="button"
 						onClick={onClose}
-						disabled={saving}
+						disabled={busy}
 						color="var(--danger)"
 						textColor="var(--foreground)"
 						borderColor="var(--border)"
