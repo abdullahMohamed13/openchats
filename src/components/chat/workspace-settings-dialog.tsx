@@ -44,6 +44,7 @@ export function WorkspaceSettingsDialog({
 	const { data: session } = authClient.useSession();
 	const members = useQuery(api.workspaces.listMembers, { workspaceId });
 	const renameWorkspace = useAction(api.workspaces.renameWorkspace);
+	const setMemberRole = useAction(api.workspaces.setMemberRole);
 	const removeMember = useAction(api.workspaces.removeMember);
 	const leaveWorkspace = useAction(api.workspaces.leaveWorkspace);
 	const deleteWorkspace = useAction(api.workspaces.deleteWorkspace);
@@ -55,13 +56,19 @@ export function WorkspaceSettingsDialog({
 	const [savingName, setSavingName] = useState(false);
 	const [nameSaved, setNameSaved] = useState(false);
 	const [removingId, setRemovingId] = useState<string | null>(null);
+	const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
 	const [confirmLeave, setConfirmLeave] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [leaving, setLeaving] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const busy = savingName || leaving || deleting || removingId !== null;
+	const busy =
+		savingName ||
+		leaving ||
+		deleting ||
+		removingId !== null ||
+		changingRoleId !== null;
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -93,6 +100,23 @@ export function WorkspaceSettingsDialog({
 			setError(getErrorMessage(cause, "Could not rename workspace."));
 		} finally {
 			setSavingName(false);
+		}
+	};
+
+	const handleRoleChange = async (member: WorkspaceMember) => {
+		const nextRole = member.role === "member" ? "admin" : "member";
+		setChangingRoleId(member.userId);
+		setError(null);
+		try {
+			await setMemberRole({
+				workspaceId,
+				userId: member.userId,
+				role: nextRole,
+			});
+		} catch (cause) {
+			setError(getErrorMessage(cause, "Could not change member role."));
+		} finally {
+			setChangingRoleId(null);
 		}
 	};
 
@@ -143,10 +167,19 @@ export function WorkspaceSettingsDialog({
 	};
 
 	const canRemove = (member: WorkspaceMember): boolean => {
-		if (!canManage || busy) return false;
+		if (!canManage) return false;
+		if (busy && removingId !== member.userId) return false;
 		if (member.userId === session?.user.id) return false;
 		if (member.role === "owner") return false;
 		if (role === "admin" && member.role === "admin") return false;
+		return true;
+	};
+
+	const canChangeRole = (member: WorkspaceMember): boolean => {
+		if (!isOwner) return false;
+		if (busy && changingRoleId !== member.userId) return false;
+		if (member.userId === session?.user.id) return false;
+		if (member.role === "owner") return false;
 		return true;
 	};
 
@@ -273,6 +306,30 @@ export function WorkspaceSettingsDialog({
 										>
 											{roleLabel(member.role)}
 										</span>
+										{canChangeRole(member) && (
+											<button
+												type="button"
+												onClick={() => void handleRoleChange(member)}
+												disabled={changingRoleId !== null}
+												aria-label={
+													member.role === "member"
+														? `Promote ${member.name} to admin`
+														: `Demote ${member.name} to member`
+												}
+												title={
+													member.role === "member"
+														? `Promote ${member.name} to admin`
+														: `Demote ${member.name} to member`
+												}
+												className="shrink-0 border border-border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+											>
+												{changingRoleId === member.userId
+													? "…"
+													: member.role === "member"
+														? "Promote"
+														: "Demote"}
+											</button>
+										)}
 										{canRemove(member) && (
 											<button
 												type="button"

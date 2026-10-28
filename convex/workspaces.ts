@@ -265,6 +265,24 @@ export const removeMemberInternal = internalMutation({
 	},
 });
 
+export const setMemberRoleInternal = internalMutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+		role: v.union(v.literal("admin"), v.literal("member")),
+	},
+	handler: async (ctx, { workspaceId, userId, role }) => {
+		const membership = await ctx.db
+			.query("workspaceMembers")
+			.withIndex("workspaceId_userId", (q) =>
+				q.eq("workspaceId", workspaceId).eq("userId", userId),
+			)
+			.first();
+		if (!membership) throw new Error("That person is not a member of this workspace");
+		await ctx.db.patch(membership._id, { role });
+	},
+});
+
 export const renameWorkspaceData = internalMutation({
 	args: {
 		workspaceId: v.id("workspaces"),
@@ -384,6 +402,51 @@ export const leaveWorkspace = action({
 
 		const auth = await getStreamServerAuth();
 		await removeUserFromWorkspaceChannels(ctx, auth, workspaceId, userId);
+
+		return { ok: true };
+	},
+});
+
+export const setMemberRole = action({
+	args: {
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+		role: v.union(v.literal("admin"), v.literal("member")),
+	},
+	handler: async (
+		ctx,
+		{ workspaceId, userId: targetUserId, role },
+	): Promise<{ ok: true }> => {
+		const actorId = await getAuthUserId(ctx);
+		const actor = await requireMembershipForAction(
+			ctx,
+			workspaceId,
+			actorId,
+		);
+
+		if (actor.role !== "owner") {
+			throw new Error("Only the workspace owner can change roles");
+		}
+		if (targetUserId === actorId) {
+			throw new Error("You can't change your own role");
+		}
+
+		const target = await ctx.runQuery(
+			internal.access.getMembershipInternal,
+			{ workspaceId, userId: targetUserId },
+		);
+		if (!target) {
+			throw new Error("That person is not a member of this workspace");
+		}
+		if (target.role === "owner") {
+			throw new Error("The workspace owner's role can't be changed");
+		}
+
+		await ctx.runMutation(internal.workspaces.setMemberRoleInternal, {
+			workspaceId,
+			userId: targetUserId,
+			role,
+		});
 
 		return { ok: true };
 	},
