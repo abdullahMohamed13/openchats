@@ -1,21 +1,10 @@
 import { Menu, Search, Bell, Settings2 } from "pixelarticons/react";
-import { UnreadBadge } from "./unread-badge";
-
-interface ConversationHeaderProps {
-  title: string;
-  subtitle: string;
-  unreadCount?: number;
-  showMenuButton?: boolean;
-  onToggleNav?: () => void;
-  onOpenChannelSettings?: () => void;
-  onOpenSearch?: () => void;
-  onOpenNotifications?: () => void;
-  notificationCount?: number;
-}
+import { UnreadBadge } from "../unread-badge";
+import { ConversationHeaderProps } from "@/types/conversation";
+import { IconButton } from "./IconButton";
 
 export function ConversationHeader({
   title,
-  subtitle,
   unreadCount,
   showMenuButton,
   onToggleNav,
@@ -29,9 +18,9 @@ export function ConversationHeader({
       {showMenuButton && (
         <button
           type="button"
-          aria-label="Open navigation"
+          aria-label="Toggle navigation"
           onClick={onToggleNav}
-          className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+          className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Menu width={20} height={20} />
         </button>
@@ -42,7 +31,7 @@ export function ConversationHeader({
         {unreadCount ? <UnreadBadge count={unreadCount} /> : null}
       </div>
 
-      <p className="hidden min-w-0 flex-1 truncate text-sm text-muted-foreground sm:block">{subtitle}</p>
+      {/*<p className="hidden min-w-0 flex-1 truncate text-sm text-muted-foreground sm:block">{subtitle}</p>*/}
 
       <div className="ml-auto flex items-center gap-1">
         {onOpenChannelSettings && (
@@ -64,27 +53,5 @@ export function ConversationHeader({
         </IconButton>
       </div>
     </header>
-  );
-}
-
-function IconButton({
-  label,
-  children,
-  onClick,
-}: {
-  label: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="relative flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-    >
-      {children}
-    </button>
   );
 }

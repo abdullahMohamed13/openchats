@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Trash } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -136,13 +136,13 @@ export function ChannelSettingsDialog({
 									aria-label="Channel name"
 									className="h-11 flex-1"
 								/>
-								<BrutalButton
+								<Button
 									type="submit"
 									disabled={!canRename}
-									className="shrink-0 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+									className="shrink-0 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed"
 								>
 									{saving ? "Saving…" : "Save"}
-								</BrutalButton>
+								</Button>
 							</form>
 						)}
 					</section>
@@ -155,23 +155,20 @@ export function ChannelSettingsDialog({
 							<p className="mt-2 text-xs text-muted-foreground">
 								This permanently deletes the channel and its messages.
 							</p>
-							<BrutalButton
+							<Button
 								type="button"
 								onClick={() => void handleDelete()}
 								disabled={busy}
-								color="var(--danger)"
-								textColor="var(--foreground)"
-								borderColor="var(--danger)"
-								shadowColor="var(--danger)"
-								className="mt-3 px-4 py-2 text-xs uppercase disabled:opacity-50"
+								variant="destructive"
+								className="mt-3 px-4 py-2 text-xs uppercase"
 							>
-								<Trash width={14} height={14} className="mr-1.5" />
+								<Trash width={14} height={14} />
 								{deleting
 									? "Deleting…"
 									: confirmDelete
 										? "Click again to delete forever"
 										: "Delete channel"}
-							</BrutalButton>
+							</Button>
 						</section>
 					)}
 
@@ -183,14 +180,15 @@ export function ChannelSettingsDialog({
 				</div>
 
 				<footer className="flex justify-end border-t border-border p-4">
-					<BrutalButton
+					<Button
 						type="button"
 						onClick={onClose}
 						disabled={busy}
-						className="px-4 py-2 text-xs uppercase disabled:opacity-50"
+						variant="outline"
+						className="px-4 py-2 text-xs uppercase"
 					>
 						Done
-					</BrutalButton>
+					</Button>
 				</footer>
 			</motion.div>
 		</div>

@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { getErrorMessage } from "@/lib/error-message";
-import type { ChannelSummary, DirectMessageSummary } from "./types";
+import type { ChannelSummary, DirectMessageSummary } from "@/types/chat";
 
 interface NotificationsDialogProps {
 	channels: ChannelSummary[];
@@ -156,22 +156,25 @@ export function NotificationsDialog({
 				</div>
 
 				<footer className="flex items-center justify-between gap-3 border-t border-border p-4">
-					<BrutalButton
+					<Button
 						type="button"
 						onClick={() => void handleMarkAllRead()}
 						disabled={marking || items.length === 0}
-						className="px-3 py-2 text-[10px] uppercase disabled:opacity-50"
+						size="sm"
+						className="px-3 py-2 text-[10px] uppercase"
 					>
 						{marking ? "Marking…" : "Mark all read"}
-					</BrutalButton>
-					<BrutalButton
+					</Button>
+					<Button
 						type="button"
 						onClick={onClose}
 						disabled={marking}
-						className="px-3 py-2 text-[10px] uppercase disabled:opacity-50"
+						variant="outline"
+						size="sm"
+						className="px-3 py-2 text-[10px] uppercase"
 					>
 						Close
-					</BrutalButton>
+					</Button>
 				</footer>
 			</motion.div>
 		</div>

@@ -4,18 +4,7 @@ import { useMemo, useState } from "react";
 import { Channel, MessageComposer, MessageList, Window, useChatContext } from "stream-chat-react";
 import { ConversationHeader } from "./conversation-header";
 import { ConversationSearchDialog } from "./conversation-search-dialog";
-
-interface ConversationAreaProps {
-  channelId: string;
-  title: string;
-  subtitle: string;
-  unreadCount?: number;
-  showMenuButton?: boolean;
-  onToggleNav?: () => void;
-  onOpenChannelSettings?: () => void;
-  onOpenNotifications?: () => void;
-  notificationCount?: number;
-}
+import { ConversationAreaProps } from "@/types/conversation";
 
 export function ConversationArea({
   channelId,

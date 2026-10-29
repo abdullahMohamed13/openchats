@@ -6,9 +6,8 @@ import { motion } from "framer-motion";
 import { AtSign, Check, Copy, Link, Mail } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
 
 interface InviteDialogProps {
@@ -18,10 +17,30 @@ interface InviteDialogProps {
 
 type Tab = "link" | "username" | "email";
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-	{ id: "link", label: "Link", icon: <Link width={14} height={14} /> },
-	{ id: "username", label: "Username", icon: <AtSign width={14} height={14} /> },
-	{ id: "email", label: "Email", icon: <Mail width={14} height={14} /> },
+const TABS: {
+	id: Tab;
+	label: string;
+	icon: React.ReactNode;
+	description: string;
+}[] = [
+	{
+		id: "link",
+		label: "Link",
+		icon: <Link width={14} height={14} />,
+		description: "Share a reusable link with anyone you want to join.",
+	},
+	{
+		id: "username",
+		label: "Username",
+		icon: <AtSign width={14} height={14} />,
+		description: "Add a teammate by their username.",
+	},
+	{
+		id: "email",
+		label: "Email",
+		icon: <Mail width={14} height={14} />,
+		description: "Send an email invite to a teammate.",
+	},
 ];
 
 export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
@@ -186,12 +205,12 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 					Invite people
 				</h2>
 				<p className="mt-3 text-sm text-muted-foreground">
-					Add teammates by username, send an email, or share a link.
+					{TABS.find((item) => item.id === tab)?.description}
 				</p>
 
 				<div className="mt-5 grid grid-cols-3 gap-2">
 					{TABS.map((item) => (
-						<button
+						<Button
 							key={item.id}
 							type="button"
 							onClick={() => {
@@ -200,16 +219,13 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 								setSuccess(null);
 							}}
 							aria-pressed={tab === item.id}
-							className={cn(
-								"flex items-center justify-center gap-1.5 border-2 px-2 py-2 text-xs font-semibold uppercase transition-colors",
-								tab === item.id
-									? "border-foreground bg-primary text-primary-foreground"
-									: "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
-							)}
+							variant={tab === item.id ? "default" : "outline"}
+							size="sm"
+							className="w-full px-2 py-2 text-xs font-semibold uppercase"
 						>
 							{item.icon}
 							{item.label}
-						</button>
+						</Button>
 					))}
 				</div>
 
@@ -232,18 +248,20 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 											onFocus={(event) => event.currentTarget.select()}
 											className="h-11 flex-1 text-xs"
 										/>
-										<BrutalButton
+										<Button
 											type="button"
 											onClick={handleCopy}
 											aria-label={copied ? "Copied invite link" : "Copy invite link"}
-											className="shrink-0 px-3 py-2 text-xs uppercase"
+											variant="outline"
+											size="icon"
+											className="size-11 shrink-0"
 										>
 											{copied ? (
 												<Check width={16} height={16} />
 											) : (
 												<Copy width={16} height={16} />
 											)}
-										</BrutalButton>
+										</Button>
 									</div>
 									<p className="text-xs text-muted-foreground">
 										This link is reusable and expires in 30 days.
@@ -254,14 +272,14 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 									<p className="text-sm text-muted-foreground">
 										Create a reusable link for this workspace.
 									</p>
-									<BrutalButton
+									<Button
 										type="button"
 										onClick={handleGenerateLink}
 										disabled={linkLoading}
-										className="mt-2 w-full px-4 py-2 text-xs uppercase disabled:opacity-50"
+										className="mt-2 w-full px-4 py-2 text-xs uppercase"
 									>
 										{linkLoading ? "Creating…" : "Create invite link"}
-									</BrutalButton>
+									</Button>
 								</>
 							)}
 						</div>
@@ -288,13 +306,13 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 							<p className="text-xs text-muted-foreground">
 								They&apos;ll be added instantly.
 							</p>
-							<BrutalButton
+							<Button
 								type="submit"
 								disabled={!username.trim() || saving}
-								className="mt-2 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+								className="mt-2 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed"
 							>
 								{saving ? "Adding…" : "Add to workspace"}
-							</BrutalButton>
+							</Button>
 						</form>
 					)}
 
@@ -311,84 +329,90 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 								type="email"
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
-								placeholder="teammate@example.com"
+								placeholder="teammate@proton.me"
 								autoComplete="email"
 								autoFocus
 								disabled={saving}
 								className="h-11"
 							/>
 							<p className="text-xs text-muted-foreground">
-								The invite expires in 7 days and only works for that address.
+								The invite expires in 7 days.
 							</p>
-							<BrutalButton
+							<Button
 								type="submit"
 								disabled={!email.trim() || saving}
-								className="mt-2 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+								className="mt-2 px-4 py-2 text-xs uppercase disabled:cursor-not-allowed"
 							>
 								{saving ? "Sending…" : "Send invite"}
-							</BrutalButton>
+							</Button>
 						</form>
 					)}
 				</div>
 
-				<section className="mt-6 border-t border-border pt-4">
-					<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-						Active invites
-					</h3>
-					{invites === undefined ? (
-						<p className="mt-2 text-xs text-muted-foreground">
-							Loading invites…
-						</p>
-					) : activeInvites.length === 0 ? (
-						<p className="mt-2 text-xs text-muted-foreground">
-							No active invites.
-						</p>
-					) : (
-						<ul className="mt-3 flex max-h-52 flex-col divide-y divide-border overflow-y-auto border-y border-border">
-							{activeInvites.map((invite) => (
-								<li
-									key={invite._id}
-									className="flex items-center gap-2 py-2"
-								>
-									<div className="min-w-0 flex-1">
-										<p className="truncate text-sm text-foreground">
-											{invite.kind === "email"
-												? invite.email
-												: "Reusable link"}
-										</p>
-										<p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Expires{" "}
-											{new Date(invite.expiresAt).toLocaleDateString()}
-										</p>
-									</div>
-									{invite.token && (
-										<button
-											type="button"
-											onClick={() =>
-												void handleCopyInvite(invite._id, invite.token!)
-											}
-											className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-primary"
-										>
-											{copiedInviteId === invite._id ? "Copied" : "Copy"}
-										</button>
-									)}
-									<button
-										type="button"
-										onClick={() => void handleRevoke(invite._id, invite.token)}
-										disabled={revokingId !== null}
-										className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-danger transition-colors hover:opacity-80 disabled:opacity-50"
+				{tab === "link" && (
+					<section className="mt-6 border-t border-border pt-4">
+						<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+							Active invites
+						</h3>
+						{invites === undefined ? (
+							<p className="mt-2 text-xs text-muted-foreground">
+								Loading invites…
+							</p>
+						) : activeInvites.length === 0 ? (
+							<p className="mt-2 text-xs text-muted-foreground">
+								No active invites.
+							</p>
+						) : (
+							<ul className="mt-3 flex max-h-52 flex-col divide-y divide-border overflow-y-auto border-y border-border">
+								{activeInvites.map((invite) => (
+									<li
+										key={invite._id}
+										className="flex items-center gap-2 py-2"
 									>
-										{revokingId === invite._id
-											? "…"
-											: confirmRevokeId === invite._id
-												? "Confirm"
-												: "Revoke"}
-									</button>
-								</li>
-							))}
-						</ul>
-					)}
-				</section>
+										<div className="min-w-0 flex-1">
+											<p className="truncate text-sm text-foreground">
+												{invite.kind === "email"
+													? invite.email
+													: "Reusable link"}
+											</p>
+											<p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+												Expires{" "}
+												{new Date(invite.expiresAt).toLocaleDateString()}
+											</p>
+										</div>
+										{invite.token && (
+											<Button
+												type="button"
+												onClick={() =>
+													void handleCopyInvite(invite._id, invite.token!)
+												}
+												variant="link"
+												size="sm"
+												className="h-auto shrink-0 p-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-primary"
+											>
+												{copiedInviteId === invite._id ? "Copied" : "Copy"}
+											</Button>
+										)}
+										<Button
+											type="button"
+											onClick={() => void handleRevoke(invite._id, invite.token)}
+											disabled={revokingId !== null}
+											variant="link"
+											size="sm"
+											className="h-auto shrink-0 p-0 text-[10px] font-semibold uppercase tracking-wide text-danger hover:text-danger/80"
+										>
+											{revokingId === invite._id
+												? "…"
+												: confirmRevokeId === invite._id
+													? "Confirm"
+													: "Revoke"}
+										</Button>
+									</li>
+								))}
+							</ul>
+						)}
+					</section>
+				)}
 
 				{error && (
 					<p role="alert" className="mt-4 text-xs text-danger">
@@ -402,18 +426,15 @@ export function InviteDialog({ workspaceId, onClose }: InviteDialogProps) {
 				)}
 
 				<div className="mt-6 flex justify-end">
-					<BrutalButton
+					<Button
 						type="button"
 						onClick={onClose}
 						disabled={busy}
-						color="var(--danger)"
-						textColor="var(--foreground)"
-						borderColor="var(--border)"
-						shadowColor="var(--border)"
+						variant="outline"
 						className="px-4 py-2 text-xs uppercase"
 					>
 						Close
-					</BrutalButton>
+					</Button>
 				</div>
 			</motion.div>
 		</div>

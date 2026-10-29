@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { CreateWorkspaceDialog } from "./create-workspace-dialog";
 import Image from "next/image";
 
@@ -76,13 +76,13 @@ export function WorkspaceGate() {
 					one to start chatting.
 				</p>
 
-				<BrutalButton
+				<Button
 					type="button"
 					onClick={() => setCreateOpen(true)}
-					className="mt-8 w-full text-sm uppercase"
+					className="mt-8 h-11 w-full text-sm uppercase"
 				>
 					Create workspace
-				</BrutalButton>
+				</Button>
 			</motion.div>
 
 			{createOpen && (

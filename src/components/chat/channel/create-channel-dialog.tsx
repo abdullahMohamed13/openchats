@@ -5,7 +5,7 @@ import { useAction } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -103,7 +103,6 @@ export function CreateChannelDialog({
 						aria-invalid={error ? true : undefined}
 						className="h-12"
 					/>
-					<p className="text-xs text-muted-foreground">1 to 40 characters.</p>
 					{error && (
 						<p role="alert" className="text-xs text-danger">
 							{error}
@@ -111,25 +110,22 @@ export function CreateChannelDialog({
 					)}
 
 					<div className="mt-4 flex justify-end gap-3">
-						<BrutalButton
+						<Button
 							type="button"
 							onClick={onClose}
 							disabled={saving}
-							color="var(--danger)"
-							textColor="var(--foreground)"
-							borderColor="var(--border)"
-							shadowColor="var(--border)"
+							variant="outline"
 							className="px-4 py-2 text-xs uppercase"
 						>
 							Cancel
-						</BrutalButton>
-						<BrutalButton
+						</Button>
+						<Button
 							type="submit"
 							disabled={!canSubmit}
-							className="bg-primary! px-4 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+							className="px-4 py-2 text-xs uppercase disabled:cursor-not-allowed"
 						>
 							{saving ? "Creating…" : "Create"}
-						</BrutalButton>
+						</Button>
 					</div>
 				</form>
 			</motion.div>

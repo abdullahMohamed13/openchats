@@ -1,26 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
+// Types
 import type { Event } from "stream-chat";
-import { useChatContext } from "stream-chat-react";
-import { Menu } from "pixelarticons/react";
-import { WorkspaceSidebar } from "./workspace-sidebar";
-import { NavSidebar } from "./nav-sidebar";
-import { ConversationArea } from "./conversation-area";
-import { CreateWorkspaceDialog } from "./create-workspace-dialog";
-import { CreateChannelDialog } from "./create-channel-dialog";
-import { InviteDialog } from "./invite-dialog";
-import { WorkspaceSettingsDialog } from "./workspace-settings-dialog";
-import { ChannelSettingsDialog } from "./channel-settings-dialog";
-import { NewDirectMessageDialog } from "./new-direct-message-dialog";
-import { NotificationsDialog } from "./notifications-dialog";
-import { useConversations } from "./use-conversations";
-import { DEFAULT_AVATAR, type CurrentUser } from "./types";
+import { DEFAULT_AVATAR, type CurrentUser } from "@/types/chat";
+// Hooks
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { authClient } from "@/lib/auth-client";
+import { useChatContext } from "stream-chat-react";
+import { useConversations } from "@/hooks/use-conversations";
+// Icons
+import { Menu } from "pixelarticons/react";
+// Components
+import { WorkspaceSidebar } from "./workspace/workspace-sidebar";
+import { NavSidebar } from "./nav-sidebar";
+import { ConversationArea } from "./conversation/conversation-area";
+import { CreateWorkspaceDialog } from "./workspace/create-workspace-dialog";
+import { CreateChannelDialog } from "./channel/create-channel-dialog";
+import { InviteDialog } from "./invite/invite-dialog";
+import { WorkspaceSettingsDialog } from "./workspace/workspace-settings-dialog";
+import { ChannelSettingsDialog } from "./channel/channel-settings-dialog";
+import { NewDirectMessageDialog } from "./dm/new-direct-message-dialog";
+import { NotificationsDialog } from "./notifications/notifications-dialog";
 
 interface ChatShellProps {
 	workspaceId: Id<"workspaces">;
@@ -40,6 +44,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	);
 	const [selectedId, setSelectedId] = useState("");
 	const [navOpen, setNavOpen] = useState(false);
+	const [navCollapsed, setNavCollapsed] = useState(false);
 	const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
 	const [createChannelOpen, setCreateChannelOpen] = useState(false);
 	const [newDmOpen, setNewDmOpen] = useState(false);
@@ -118,6 +123,14 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 		setNavOpen(false);
 	};
 
+	const handleToggleNav = () => {
+		if (window.matchMedia("(min-width: 1024px)").matches) {
+			setNavCollapsed((collapsed) => !collapsed);
+		} else {
+			setNavOpen((open) => !open);
+		}
+	};
+
 	const handleSelectWorkspace = (id: string) => {
 		setNavOpen(false);
 		if (id !== workspaceId) router.push(`/w/${id}`);
@@ -141,11 +154,11 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 
 	const emptyState = (
 		<main className="flex min-w-0 flex-1 flex-col bg-background">
-			<header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4 lg:hidden">
+			<header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
 				<button
 					type="button"
-					aria-label="Open navigation"
-					onClick={() => setNavOpen(true)}
+					aria-label="Toggle navigation"
+					onClick={handleToggleNav}
 					className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 				>
 					<Menu width={20} height={20} />
@@ -188,6 +201,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				onOpenInvite={() => setInviteOpen(true)}
 				onOpenSettings={() => setSettingsOpen(true)}
 				open={navOpen}
+				collapsed={navCollapsed}
 				onClose={() => setNavOpen(false)}
 			/>
 
@@ -200,7 +214,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					title={resolved.title}
 					subtitle={resolved.subtitle}
 					showMenuButton
-					onToggleNav={() => setNavOpen((open) => !open)}
+					onToggleNav={handleToggleNav}
 					onOpenChannelSettings={
 						activeChannelRow && canManageChannels
 							? () => setChannelSettingsOpen(true)

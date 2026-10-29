@@ -2,13 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Event, StreamChat } from "stream-chat";
-import { DEFAULT_AVATAR, type ChannelSummary, type DirectMessageSummary } from "./types";
-
-interface Conversations {
-	channels: ChannelSummary[];
-	dms: DirectMessageSummary[];
-	loading: boolean;
-}
+import { DEFAULT_AVATAR, type ChannelSummary, type DirectMessageSummary } from "@/types/chat";
+import { Conversations } from "@/types/conversation";
 
 const EMPTY: Conversations = { channels: [], dms: [], loading: true };
 

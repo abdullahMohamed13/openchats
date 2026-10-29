@@ -8,10 +8,10 @@ import type { ChannelFilters } from "stream-chat";
 import { useChatContext } from "stream-chat-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
-import { DEFAULT_AVATAR, type WorkspaceMember } from "./types";
+import { DEFAULT_AVATAR, type WorkspaceMember } from "@/types/chat";
 
 interface NewDirectMessageDialogProps {
 	workspaceId: Id<"workspaces">;
@@ -202,14 +202,15 @@ export function NewDirectMessageDialog({
 				</div>
 
 				<footer className="flex justify-end border-t border-border p-4">
-					<BrutalButton
+					<Button
 						type="button"
 						onClick={onClose}
 						disabled={creating}
-						className="px-4 py-2 text-xs uppercase disabled:opacity-50"
+						variant="outline"
+						className="px-4 py-2 text-xs uppercase"
 					>
 						Cancel
-					</BrutalButton>
+					</Button>
 				</footer>
 			</motion.div>
 		</div>

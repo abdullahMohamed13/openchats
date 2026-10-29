@@ -20,7 +20,7 @@ import {
 	DEFAULT_AVATAR,
 	type WorkspaceMember,
 	type WorkspaceRole,
-} from "./types";
+} from "@/types/chat";
 
 const MAX_WORKSPACE_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -359,7 +359,7 @@ export function WorkspaceSettingsDialog({
 								</h3>
 								<form
 									onSubmit={handleRename}
-									className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center"
+									className="mt-2 flex flex-col gap-6 sm:flex-row sm:items-center"
 								>
 									<Input
 										value={name}
@@ -437,7 +437,7 @@ export function WorkspaceSettingsDialog({
 											{roleLabel(member.role)}
 										</span>
 										{canChangeRole(member) && (
-											<button
+											<Button
 												type="button"
 												onClick={() => void handleRoleChange(member)}
 												disabled={changingRoleId !== null}
@@ -451,30 +451,34 @@ export function WorkspaceSettingsDialog({
 														? `Promote ${member.name} to admin`
 														: `Demote ${member.name} to member`
 												}
-												className="shrink-0 border border-border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+												variant="outline"
+												size="sm"
+												className="h-auto shrink-0 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide"
 											>
 												{changingRoleId === member.userId
 													? "…"
 													: member.role === "member"
 														? "Promote"
 														: "Demote"}
-											</button>
+											</Button>
 										)}
 										{canRemove(member) && (
-											<button
+											<Button
 												type="button"
 												onClick={() => void handleRemove(member)}
 												disabled={removingId !== null}
 												aria-label={`Remove ${member.name}`}
 												title={`Remove ${member.name}`}
-												className="flex size-8 shrink-0 items-center justify-center text-danger transition-colors hover:text-danger disabled:opacity-50"
+												variant="ghost"
+												size="sm"
+												className="size-8 shrink-0 p-0 text-danger hover:text-danger/60"
 											>
 												{removingId === member.userId ? (
 													<span className="text-[10px]">…</span>
 												) : (
 													<UserMinus width={16} height={16} />
 												)}
-											</button>
+											</Button>
 										)}
 									</li>
 								))}
@@ -508,14 +512,16 @@ export function WorkspaceSettingsDialog({
 					)}
 
 					{isOwner && (
-						<section className="mt-6">
-							<h3 className="text-xs font-semibold uppercase tracking-wide text-danger">
-								Delete workspace
-							</h3>
-							<p className="mt-2 text-xs text-muted-foreground">
-								This permanently deletes the workspace, its channels, and
-								invites for everyone.
-							</p>
+						<section className="flex flex-col md:flex-row items-center gap-4 mt-6">
+							<div>
+								<h3 className="font-press-start text-xs font-semibold uppercase tracking-wide text-danger">
+									Delete workspace
+								</h3>
+								<p className="mt-2 text-xs text-muted-foreground">
+									This permanently deletes the workspace, its channels, and
+									invites for everyone.
+								</p>
+							</div>
 							<Button
 								type="button"
 								onClick={() => void handleDelete()}

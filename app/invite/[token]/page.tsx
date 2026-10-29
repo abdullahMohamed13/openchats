@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { InviteAccept } from "@/components/chat/invite-accept";
+import { InviteAccept } from "@/components/chat/invite/invite-accept";
 
 export const metadata: Metadata = {
 	title: "Workspace invite",

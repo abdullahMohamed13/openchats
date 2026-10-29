@@ -10,33 +10,13 @@ import {
 } from "stream-chat-react";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
-
-interface ConversationSearchDialogProps {
-	onClose: () => void;
-}
+import { HighlightedText } from "./highlighted-text";
+import { ConversationSearchDialogProps } from "@/types/conversation";
 
 function messageText(message: MessageResponse): string {
 	if (message.text?.trim()) return message.text;
 	if (message.attachments?.length) return "Attachment";
 	return "Message";
-}
-
-function HighlightedText({ text, term }: { text: string; term: string }) {
-	const normalized = term.trim();
-	if (!normalized) return <>{text}</>;
-
-	const index = text.toLowerCase().indexOf(normalized.toLowerCase());
-	if (index === -1) return <>{text}</>;
-
-	return (
-		<>
-			{text.slice(0, index)}
-			<mark className="bg-primary/30 text-foreground">
-				{text.slice(index, index + normalized.length)}
-			</mark>
-			{text.slice(index + normalized.length)}
-		</>
-	);
 }
 
 export function ConversationSearchDialog({
