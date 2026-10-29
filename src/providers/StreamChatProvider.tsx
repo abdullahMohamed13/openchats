@@ -7,7 +7,7 @@ import { Plus } from "pixelarticons/react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
-import { StreamNotifications } from "@/components/chat/notifications/stream-notifications";
+import { StreamNotifications } from "@/components/chat/notifications/StreamNotifications";
 import { streamIcons } from "@/data/stream-icons";
 import "stream-chat-react/dist/css/index.css";
 

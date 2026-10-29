@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/8bit/button";
-import { CreateWorkspaceDialog } from "./create-workspace-dialog";
+import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 import Image from "next/image";
 
 export function WorkspaceGate() {
@@ -18,7 +18,7 @@ export function WorkspaceGate() {
 
 	useEffect(() => {
 		if (firstWorkspace) {
-			router.replace(`/w/${firstWorkspace._id}`);
+			router.replace(`/chat/w/${firstWorkspace._id}`);
 		}
 	}, [firstWorkspace, router]);
 

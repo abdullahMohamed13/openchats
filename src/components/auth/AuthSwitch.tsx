@@ -3,18 +3,20 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, User, Loading, Google, Github, Home, Eye, EyeOff } from "pixelarticons/react";
+import { Lock, Mail, User, Loading, Home } from "pixelarticons/react";
 import { handleSignIn } from "@/lib/sign-in";
 import { handleUsernameSignIn } from "@/lib/sign-in.username";
+import type { SocialProvider } from "@/types/social";
 import { handleSignup } from "@/lib/sign-up";
 import { handleSocialLogin } from "@/lib/social";
-import type { SocialProvider } from "@/types/auth";
 import {
   PASSWORD_MIN_LENGTH,
   validateAuthField,
   validateAuthForm,
   type AuthFieldSpec,
 } from "@/lib/auth-validation";
+import { SocialIcons } from "./SocialIcons";
+import { Field } from "./Field";
 import "@/styles/auth.css";
 
 export type AuthSwitchProps = {
@@ -325,112 +327,5 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
         </div>
       </div>
     </div>
-  );
-}
-
-interface FieldProps {
-  id: string;
-  spec: AuthFieldSpec;
-  type: "text" | "email" | "password";
-  icon: React.ReactNode;
-  placeholder: string;
-  autoComplete?: string;
-  errors: Record<string, string>;
-  onBlur: (spec: AuthFieldSpec, value: string) => void;
-  onChange: (name: string) => void;
-}
-
-function Field({ id, spec, type, icon, placeholder, autoComplete, errors, onBlur, onChange }: FieldProps) {
-  const [revealed, setRevealed] = useState(false);
-  const message = errors[spec.name];
-  const isPassword = type === "password";
-
-  return (
-    <div className="field-group">
-      <div className={`input-field ${message ? "has-error" : ""}`}>
-        <i>{icon}</i>
-        <input
-          id={id}
-          type={isPassword && revealed ? "text" : type}
-          name={spec.name}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          aria-invalid={message ? true : undefined}
-          aria-describedby={message ? `${id}-error` : undefined}
-          onChange={() => onChange(spec.name)}
-          onBlur={(e) => onBlur(spec, e.target.value)}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            className="password-toggle"
-            onClick={() => setRevealed((prev) => !prev)}
-            aria-label={revealed ? "Hide password" : "Show password"}
-            aria-pressed={revealed}
-          >
-            {revealed ? <Eye width={18} height={18} aria-hidden /> : <EyeOff width={18} height={18} aria-hidden />}
-          </button>
-        )}
-      </div>
-      {message && (
-        <p id={`${id}-error`} role="alert" className="field-error">
-          {message}
-        </p>
-      )}
-    </div>
-  );
-}
-
-interface SocialIconsProps {
-  disabled: boolean;
-  pendingProvider: SocialProvider | null;
-  onSelect: (provider: SocialProvider) => void;
-}
-
-function SocialIcons({ disabled, pendingProvider, onSelect }: SocialIconsProps) {
-  return (
-    <>
-      <SocialButton
-        provider="google"
-        name="Google"
-        icon={<Google width={20} height={20} />}
-        disabled={disabled}
-        pending={pendingProvider === "google"}
-        onSelect={onSelect}
-      />
-      <SocialButton
-        provider="github"
-        name="GitHub"
-        icon={<Github width={20} height={20} />}
-        disabled={disabled}
-        pending={pendingProvider === "github"}
-        onSelect={onSelect}
-      />
-    </>
-  );
-}
-
-interface SocialButtonProps {
-  provider: SocialProvider;
-  name: string;
-  icon: React.ReactNode;
-  disabled: boolean;
-  pending: boolean;
-  onSelect: (provider: SocialProvider) => void;
-}
-
-function SocialButton({ provider, name, icon, disabled, pending, onSelect }: SocialButtonProps) {
-  return (
-    <button
-      type="button"
-      className="social-icon"
-      onClick={() => onSelect(provider)}
-      disabled={disabled}
-      aria-label={`Continue with ${name}`}
-      aria-busy={pending || undefined}
-    >
-      {pending ? <Loading width={20} height={20} className="animate-spin" /> : icon}
-      <span>{name}</span>
-    </button>
   );
 }

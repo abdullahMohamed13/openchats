@@ -12,10 +12,11 @@ import { checkUsername } from "@/lib/is-username-taken";
 import type { UsernameAvailability } from "@/lib/is-username-taken";
 // Data
 import { DURATION_FAST } from "@/lib/motion";
-import { CHARACTERS } from "../../data/characters";
-import { BADGES } from "../../data/badges";
+import { CHARACTERS } from "@/data/characters";
+import { BADGES } from "@/data/badges";
+import { STEPS, ROLES, type Role } from "@/data/onboarding";
 // Components
-import BrutalButton from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Progress } from "@/components/ui/8bit/progress";
 import { Input } from "@/components/ui/8bit/input";
 import {
@@ -35,17 +36,6 @@ function nextDestination(): string {
 	return pending ? `/invite/${pending}` : "/chat";
 }
 
-const ROLES = [
-	"Team lead",
-	"Team member",
-	"Student",
-	"Club member",
-	"Community organizer",
-	"Project collaborator",
-] as const;
-
-type Role = (typeof ROLES)[number];
-
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,20}$/;
 
 const slugifyName = (name?: string | null): string => {
@@ -57,13 +47,6 @@ const slugifyName = (name?: string | null): string => {
 		.replace(/[^a-z0-9_.]/g, "")
 		.slice(0, 20);
 };
-
-const STEPS = [
-	{ title: "Username", subtitle: "What should we call you?" },
-	// { title: "Phone", subtitle: "How can we reach you?" },
-	{ title: "Avatar", subtitle: "Pick your role and choose an avatar" },
-	{ title: "Badge", subtitle: "Pick a badge that represents you" },
-] as const;
 
 export default function OnboardingWizard() {
 	const router = useRouter();
@@ -361,18 +344,16 @@ export default function OnboardingWizard() {
 							</AnimatePresence>
 
 							<div className="mt-3 flex justify-end">
-								<BrutalButton
+								<Button
 									type="button"
 									onClick={() => setPreviewing((open) => !open)}
 									disabled={!selectedAvatar}
-									color="var(--muted)"
-									textColor="var(--foreground)"
-									borderColor="var(--border)"
-									shadowColor="var(--border)"
-									className="gap-2 px-3 py-1.5 text-xs! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+									variant="outline"
+									size="sm"
+									className="gap-2 px-3 py-1.5 text-xs disabled:cursor-not-allowed"
 								>
 									{previewing ? "Close preview" : "Preview"}
-								</BrutalButton>
+								</Button>
 							</div>
 
 							<AnimatePresence initial={false}>
@@ -472,30 +453,24 @@ export default function OnboardingWizard() {
 
 		<div className="mt-8 flex items-center justify-between gap-3">
 			{step > 0 ? (
-				<BrutalButton
+				<Button
 					type="button"
 					onClick={goBack}
-					color="var(--muted)"
-					textColor="var(--muted-foreground)"
-					borderColor="var(--border)"
-					shadowColor="var(--border)"
-					className="gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+					variant="outline"
+					className="gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed"
 				>
 					<Image src={arrowIcon} alt="Back" width={20} height={20} className="rotate-180" />
 					Back
-				</BrutalButton>
+				</Button>
 			) : (
 				<span />
 			)}
 
-			<BrutalButton
+			<Button
 				type="button"
 				onClick={step === STEPS.length - 1 ? handleFinish : goNext}
 				disabled={!canProceed || saving || checkingUsername}
-				color="var(--primary)"
-				textColor="var(--foreground)"
-				borderColor="var(--foreground)"
-				className="gap-2 px-5 py-2 uppercase tracking-wider text-sm! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+				className="gap-2 px-5 py-2 uppercase tracking-wider text-sm disabled:cursor-not-allowed"
 			>
 				{step === STEPS.length - 1
 					? saving
@@ -505,17 +480,19 @@ export default function OnboardingWizard() {
 						? "Checking..."
 						: "Continue"}
 				{step !== STEPS.length - 1 && !checkingUsername && <Image src={arrowIcon} alt="Next" width={20} height={20} />}
-			</BrutalButton>
+			</Button>
 		</div>
 
 		<div className="mt-4 text-center">
-			<button
+			<Button
 				type="button"
 				onClick={handleSkip}
-				className="text-xs text-muted-foreground underline transition-colors hover:text-foreground"
+				variant="link"
+				size="sm"
+				className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
 			>
 				Skip onboarding for now
-			</button>
+			</Button>
 		</div>
 		</div>
 	);

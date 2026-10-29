@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/8bit/input";
 import { Skeleton } from "@/components/ui/8bit/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
-import { WorkspaceAvatar } from "./workspace-avatar";
+import { WorkspaceAvatar } from "./WorkspaceAvatar";
 import {
 	DEFAULT_AVATAR,
 	type WorkspaceMember,

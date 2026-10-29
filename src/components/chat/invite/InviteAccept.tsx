@@ -34,7 +34,7 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 		try {
 			const { workspaceId } = await acceptInvite({ token });
 			window.localStorage.removeItem(PENDING_INVITE_KEY);
-			router.push(`/w/${workspaceId}`);
+			router.push(`/chat/w/${workspaceId}`);
 		} catch (cause) {
 			setError(getErrorMessage(cause, "Could not accept the invite."));
 			setAccepting(false);

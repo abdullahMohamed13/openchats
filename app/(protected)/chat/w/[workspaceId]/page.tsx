@@ -1,5 +1,5 @@
 import type { Id } from "@/convex/_generated/dataModel";
-import { ChatShell } from "@/components/chat/chat-shell";
+import { ChatShell } from "@/components/chat/ChatShell";
 
 interface WorkspacePageProps {
   params: Promise<{ workspaceId: string }>;

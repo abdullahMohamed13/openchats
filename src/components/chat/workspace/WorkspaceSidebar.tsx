@@ -7,8 +7,8 @@ import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
 import { Button } from "@/components/ui/8bit/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "../sign-out-button";
-import { WorkspaceAvatar } from "./workspace-avatar";
+import { SignOutButton } from "../SignOutButton";
+import { WorkspaceAvatar } from "./WorkspaceAvatar";
 import type { CurrentUser, WorkspaceSummary } from "@/types/chat";
 
 interface WorkspaceSidebarProps {
@@ -53,7 +53,7 @@ export function WorkspaceSidebar({
 						<button
 							key={workspace._id}
 							type="button"
-							onClick={() => router.push(`/w/${workspace._id}`)}
+							onClick={() => router.push(`/chat/w/${workspace._id}`)}
 							aria-label={`Open ${workspace.name}`}
 							aria-current={active ? "page" : undefined}
 							title={workspace.name}

@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Channel, MessageComposer, MessageList, Window, useChatContext } from "stream-chat-react";
-import { ConversationHeader } from "./conversation-header";
-import { ConversationSearchDialog } from "./conversation-search-dialog";
+import { ConversationHeader } from "./ConversationHeader";
+import { ConversationSearchDialog } from "./ConversationSearchDialog";
 import { ConversationAreaProps } from "@/types/conversation";
 
 export function ConversationArea({
