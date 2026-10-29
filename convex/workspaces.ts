@@ -66,6 +66,10 @@ function normalizeWorkspaceName(value: string): string {
 	return trimmed;
 }
 
+function workspaceNameKey(value: string): string {
+	return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 export const listMyWorkspaces = query({
 	args: {},
 	handler: async (ctx): Promise<WorkspaceSummary[]> => {
@@ -161,6 +165,20 @@ export const insertWorkspace = internalMutation({
 		ownerId: v.string(),
 	},
 	handler: async (ctx, { name, ownerId }) => {
+		const nameKey = workspaceNameKey(name);
+		const ownedWorkspaces = await ctx.db
+			.query("workspaces")
+			.withIndex("ownerId", (q) => q.eq("ownerId", ownerId))
+			.collect();
+
+		if (
+			ownedWorkspaces.some(
+				(workspace) => workspaceNameKey(workspace.name) === nameKey,
+			)
+		) {
+			throw new Error(`You already have a workspace named “${name}”`);
+		}
+
 		const baseSlug = slugifyWorkspaceName(name) || "workspace";
 		let slug = baseSlug;
 		let suffix = 2;
@@ -302,6 +320,25 @@ export const renameWorkspaceData = internalMutation({
 		name: v.string(),
 	},
 	handler: async (ctx, { workspaceId, name }) => {
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) throw new Error("Workspace not found");
+
+		const nameKey = workspaceNameKey(name);
+		const ownedWorkspaces = await ctx.db
+			.query("workspaces")
+			.withIndex("ownerId", (q) => q.eq("ownerId", workspace.ownerId))
+			.collect();
+
+		if (
+			ownedWorkspaces.some(
+				(other) =>
+					other._id !== workspaceId &&
+					workspaceNameKey(other.name) === nameKey,
+			)
+		) {
+			throw new Error(`You already have a workspace named “${name}”`);
+		}
+
 		await ctx.db.patch(workspaceId, { name });
 	},
 });
