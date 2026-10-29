@@ -1,7 +1,8 @@
 import { authClient } from "./auth-client"
-import { toast } from "@/components/ui/8bit/toast"
 import { friendlyAuthError } from "./auth-validation"
-import type { AuthSetLoading, SocialProviders } from "@/types/auth"
+import type { AuthSetLoading } from "@/types/auth"
+import type { SocialProviders } from "@/types/social"
+import { toast } from "@/components/ui/8bit/toast"
 
 type SocialProps = SocialProviders & {
 	callbackURL: string

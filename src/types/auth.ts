@@ -17,12 +17,6 @@ type SignUpProps = {
 	callbackURL: "/onboarding"
 } & AuthCredentials & AuthSetLoading
 
-type SocialProviders = {
-	provider: "github" | "google"
-}
-
-type SocialProvider = SocialProviders["provider"]
-
 type UsernameSignInProps = AuthSetLoading & {
 	username: string;
 	password: string;
@@ -38,4 +32,4 @@ type ResetPasswordProps = AuthSetLoading & {
 	token?: string;
 };
 
-export type { SocialProvider, SocialProviders, AuthSetLoading, SignInProps, SignUpProps, UsernameSignInProps, ForgotPasswordProps, ResetPasswordProps }
+export type { AuthSetLoading, SignInProps, SignUpProps, UsernameSignInProps, ForgotPasswordProps, ResetPasswordProps }
