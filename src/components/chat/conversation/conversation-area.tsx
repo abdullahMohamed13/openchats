@@ -1,17 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Channel, MessageComposer, MessageList, Window, useChatContext } from "stream-chat-react";
 import { ConversationHeader } from "./conversation-header";
-
-interface ConversationAreaProps {
-  channelId: string;
-  title: string;
-  subtitle: string;
-  unreadCount?: number;
-  showMenuButton?: boolean;
-  onToggleNav?: () => void;
-}
+import { ConversationSearchDialog } from "./conversation-search-dialog";
+import { ConversationAreaProps } from "@/types/conversation";
 
 export function ConversationArea({
   channelId,
@@ -20,8 +13,12 @@ export function ConversationArea({
   unreadCount,
   showMenuButton,
   onToggleNav,
+  onOpenChannelSettings,
+  onOpenNotifications,
+  notificationCount,
 }: ConversationAreaProps) {
   const { client } = useChatContext();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const channel = useMemo(
     () => client.channel("messaging", channelId),
@@ -38,10 +35,17 @@ export function ConversationArea({
             unreadCount={unreadCount}
             showMenuButton={showMenuButton}
             onToggleNav={onToggleNav}
+            onOpenChannelSettings={onOpenChannelSettings}
+            onOpenSearch={() => setSearchOpen(true)}
+            onOpenNotifications={onOpenNotifications}
+            notificationCount={notificationCount}
           />
           <MessageList />
           <MessageComposer />
         </Window>
+        {searchOpen && (
+          <ConversationSearchDialog onClose={() => setSearchOpen(false)} />
+        )}
       </Channel>
     </main>
   );

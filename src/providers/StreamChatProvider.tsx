@@ -2,17 +2,22 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { StreamChat } from "stream-chat";
-import { Chat } from "stream-chat-react";
+import { Chat, WithComponents } from "stream-chat-react";
+import { Plus } from "pixelarticons/react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
+import { StreamNotifications } from "@/components/chat/notifications/stream-notifications";
+import { streamIcons } from "@/data/stream-icons";
 import "stream-chat-react/dist/css/index.css";
 
-interface StreamChatProviderProps {
-	children: ReactNode;
+function AttachmentSelectorPlus() {
+	return (
+		<Plus className="str-chat__icon str-chat__attachment-selector__menu-button__icon" />
+	);
 }
 
-export default function StreamChatProvider({ children }: StreamChatProviderProps) {
+export default function StreamChatProvider({ children }: {children: ReactNode }) {
 	const { data: session, isPending } = authClient.useSession();
 	const generateStreamToken = useAction(api.stream.generateStreamToken);
 	const [client, setClient] = useState<StreamChat | null>(null);
@@ -89,8 +94,20 @@ export default function StreamChatProvider({ children }: StreamChatProviderProps
 	}
 
 	return (
-		<Chat client={client} theme="str-chat__theme-dark">
-			{children}
+		<Chat
+			client={client}
+			theme="str-chat__theme-dark"
+			notificationDisplayFilter={() => false}
+		>
+			<WithComponents
+				overrides={{
+					icons: streamIcons,
+					AttachmentSelectorInitiationButtonContents: AttachmentSelectorPlus,
+				}}
+			>
+				<StreamNotifications />
+				{children}
+			</WithComponents>
 		</Chat>
 	);
 }

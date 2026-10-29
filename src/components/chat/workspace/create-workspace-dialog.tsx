@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -99,7 +99,6 @@ export function CreateWorkspaceDialog({ onClose }: CreateWorkspaceDialogProps) {
 						aria-invalid={error ? true : undefined}
 						className="h-12"
 					/>
-					<p className="text-xs text-muted-foreground">2 to 50 characters.</p>
 					{error && (
 						<p role="alert" className="text-xs text-danger">
 							{error}
@@ -107,25 +106,22 @@ export function CreateWorkspaceDialog({ onClose }: CreateWorkspaceDialogProps) {
 					)}
 
 					<div className="mt-4 flex justify-end gap-3">
-						<BrutalButton
+						<Button
 							type="button"
 							onClick={onClose}
 							disabled={saving}
-							color="var(--danger)"
-							textColor="var(--foreground)"
-							borderColor="var(--border)"
-							shadowColor="var(--border)"
-							className="px-4 py-2 text-xs uppercase b"
+							variant="outline"
+							className="px-4 py-2 text-xs uppercase"
 						>
 							Cancel
-						</BrutalButton>
-						<BrutalButton
+						</Button>
+						<Button
 							type="submit"
 							disabled={!canSubmit}
-							className="px-4 py-2 text-xs uppercase bg-primary! disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+							className="px-4 py-2 text-xs uppercase disabled:cursor-not-allowed"
 						>
 							{saving ? "Creating…" : "Create"}
-						</BrutalButton>
+						</Button>
 					</div>
 				</form>
 			</motion.div>

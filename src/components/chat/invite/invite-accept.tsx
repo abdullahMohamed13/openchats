@@ -7,7 +7,7 @@ import { useAction, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
-import { BrutalButton } from "@/components/ui/brutal-button";
+import { Button } from "@/components/ui/8bit/button";
 import { getErrorMessage } from "@/lib/error-message";
 
 const PENDING_INVITE_KEY = "openchats:pendingInvite";
@@ -129,24 +129,25 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 							This invite was sent to {invite.email}. Sign out and sign in with
 							that address to join.
 						</p>
-						<BrutalButton
+						<Button
 							type="button"
 							onClick={() => void handleSignOut()}
+							variant="outline"
 							className="mt-6 w-full px-4 py-3 text-xs uppercase"
 						>
 							Sign out
-						</BrutalButton>
+						</Button>
 					</>
 				) : (
 					<>
-						<BrutalButton
+						<Button
 							type="button"
 							onClick={() => void handleAccept()}
 							disabled={accepting}
-							className="mt-6 w-full px-4 py-3 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-50"
+							className="mt-6 w-full px-4 py-3 text-xs uppercase disabled:cursor-not-allowed"
 						>
 							{accepting ? "Joining…" : `Join ${invite.workspaceName}`}
-						</BrutalButton>
+						</Button>
 						{error && (
 							<p role="alert" className="mt-4 text-xs text-danger">
 								{error}

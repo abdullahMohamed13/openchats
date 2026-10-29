@@ -1,6 +1,6 @@
 import { Hash } from "pixelarticons/react";
 import { cn } from "@/lib/utils";
-import { UnreadBadge } from "./unread-badge";
+import { UnreadBadge } from "../unread-badge";
 
 interface ChannelItemProps {
 	name: string;

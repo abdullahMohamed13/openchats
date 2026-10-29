@@ -6,10 +6,12 @@ import {
 	action,
 	internalMutation,
 	internalQuery,
+	mutation,
 	query,
 } from "./_generated/server";
 import {
 	getAuthUserId,
+	requireAdmin,
 	requireAdminForAction,
 	requireMembership,
 	requireMembershipForAction,
@@ -29,10 +31,13 @@ type WorkspaceSummary = {
 	_id: Id<"workspaces">;
 	name: string;
 	slug: string;
+	imageUrl: string | null;
 	role: "owner" | "admin" | "member";
 	joinedAt: number;
 	createdAt: number;
 };
+
+const MAX_WORKSPACE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type MemberProfile = {
 	userId: string;
@@ -61,6 +66,10 @@ function normalizeWorkspaceName(value: string): string {
 	return trimmed;
 }
 
+function workspaceNameKey(value: string): string {
+	return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 export const listMyWorkspaces = query({
 	args: {},
 	handler: async (ctx): Promise<WorkspaceSummary[]> => {
@@ -81,6 +90,9 @@ export const listMyWorkspaces = query({
 					_id: workspace._id,
 					name: workspace.name,
 					slug: workspace.slug,
+					imageUrl: workspace.imageId
+						? await ctx.storage.getUrl(workspace.imageId)
+						: null,
 					role: membership.role,
 					joinedAt: membership.joinedAt,
 					createdAt: workspace.createdAt,
@@ -153,6 +165,20 @@ export const insertWorkspace = internalMutation({
 		ownerId: v.string(),
 	},
 	handler: async (ctx, { name, ownerId }) => {
+		const nameKey = workspaceNameKey(name);
+		const ownedWorkspaces = await ctx.db
+			.query("workspaces")
+			.withIndex("ownerId", (q) => q.eq("ownerId", ownerId))
+			.collect();
+
+		if (
+			ownedWorkspaces.some(
+				(workspace) => workspaceNameKey(workspace.name) === nameKey,
+			)
+		) {
+			throw new Error(`You already have a workspace named “${name}”`);
+		}
+
 		const baseSlug = slugifyWorkspaceName(name) || "workspace";
 		let slug = baseSlug;
 		let suffix = 2;
@@ -220,6 +246,11 @@ export const deleteWorkspaceData = internalMutation({
 			await ctx.db.delete(member._id);
 		}
 
+		const workspace = await ctx.db.get(workspaceId);
+		if (workspace?.imageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
 		await ctx.db.delete(workspaceId);
 	},
 });
@@ -265,12 +296,49 @@ export const removeMemberInternal = internalMutation({
 	},
 });
 
+export const setMemberRoleInternal = internalMutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+		role: v.union(v.literal("admin"), v.literal("member")),
+	},
+	handler: async (ctx, { workspaceId, userId, role }) => {
+		const membership = await ctx.db
+			.query("workspaceMembers")
+			.withIndex("workspaceId_userId", (q) =>
+				q.eq("workspaceId", workspaceId).eq("userId", userId),
+			)
+			.first();
+		if (!membership) throw new Error("That person is not a member of this workspace");
+		await ctx.db.patch(membership._id, { role });
+	},
+});
+
 export const renameWorkspaceData = internalMutation({
 	args: {
 		workspaceId: v.id("workspaces"),
 		name: v.string(),
 	},
 	handler: async (ctx, { workspaceId, name }) => {
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) throw new Error("Workspace not found");
+
+		const nameKey = workspaceNameKey(name);
+		const ownedWorkspaces = await ctx.db
+			.query("workspaces")
+			.withIndex("ownerId", (q) => q.eq("ownerId", workspace.ownerId))
+			.collect();
+
+		if (
+			ownedWorkspaces.some(
+				(other) =>
+					other._id !== workspaceId &&
+					workspaceNameKey(other.name) === nameKey,
+			)
+		) {
+			throw new Error(`You already have a workspace named “${name}”`);
+		}
+
 		await ctx.db.patch(workspaceId, { name });
 	},
 });
@@ -335,6 +403,78 @@ export const renameWorkspace = action({
 	},
 });
 
+export const generateWorkspaceImageUploadUrl = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+	},
+	handler: async (ctx, { workspaceId }): Promise<string> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+		return await ctx.storage.generateUploadUrl();
+	},
+});
+
+export const setWorkspaceImage = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+		storageId: v.id("_storage"),
+	},
+	handler: async (
+		ctx,
+		{ workspaceId, storageId },
+	): Promise<{ imageUrl: string | null }> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) {
+			throw new Error("Workspace not found");
+		}
+
+		const metadata = await ctx.db.system.get("_storage", storageId);
+		if (!metadata) {
+			throw new Error("The uploaded image could not be found");
+		}
+		if (!metadata.contentType?.startsWith("image/")) {
+			await ctx.storage.delete(storageId);
+			throw new Error("Workspace images must be image files");
+		}
+		if (metadata.size > MAX_WORKSPACE_IMAGE_BYTES) {
+			await ctx.storage.delete(storageId);
+			throw new Error("Workspace images must be 5 MB or smaller");
+		}
+
+		await ctx.db.patch(workspaceId, { imageId: storageId });
+		if (workspace.imageId && workspace.imageId !== storageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
+		return { imageUrl: await ctx.storage.getUrl(storageId) };
+	},
+});
+
+export const removeWorkspaceImage = mutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+	},
+	handler: async (ctx, { workspaceId }): Promise<{ ok: true }> => {
+		const userId = await getAuthUserId(ctx);
+		await requireAdmin(ctx, workspaceId, userId);
+
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) {
+			throw new Error("Workspace not found");
+		}
+
+		await ctx.db.patch(workspaceId, { imageId: undefined });
+		if (workspace.imageId) {
+			await ctx.storage.delete(workspace.imageId);
+		}
+
+		return { ok: true };
+	},
+});
+
 export const deleteWorkspace = action({
 	args: {
 		workspaceId: v.id("workspaces"),
@@ -384,6 +524,51 @@ export const leaveWorkspace = action({
 
 		const auth = await getStreamServerAuth();
 		await removeUserFromWorkspaceChannels(ctx, auth, workspaceId, userId);
+
+		return { ok: true };
+	},
+});
+
+export const setMemberRole = action({
+	args: {
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+		role: v.union(v.literal("admin"), v.literal("member")),
+	},
+	handler: async (
+		ctx,
+		{ workspaceId, userId: targetUserId, role },
+	): Promise<{ ok: true }> => {
+		const actorId = await getAuthUserId(ctx);
+		const actor = await requireMembershipForAction(
+			ctx,
+			workspaceId,
+			actorId,
+		);
+
+		if (actor.role !== "owner") {
+			throw new Error("Only the workspace owner can change roles");
+		}
+		if (targetUserId === actorId) {
+			throw new Error("You can't change your own role");
+		}
+
+		const target = await ctx.runQuery(
+			internal.access.getMembershipInternal,
+			{ workspaceId, userId: targetUserId },
+		);
+		if (!target) {
+			throw new Error("That person is not a member of this workspace");
+		}
+		if (target.role === "owner") {
+			throw new Error("The workspace owner's role can't be changed");
+		}
+
+		await ctx.runMutation(internal.workspaces.setMemberRoleInternal, {
+			workspaceId,
+			userId: targetUserId,
+			role,
+		});
 
 		return { ok: true };
 	},

@@ -18,9 +18,18 @@ import {
 	getStreamServerAuth,
 	removeUserFromChannel,
 	slugifyChannelName,
+	updateStreamChannelName,
 	upsertStreamUser,
 	type StreamServerAuth,
 } from "./stream";
+
+function normalizeChannelName(value: string): string {
+	const trimmed = value.trim().replace(/\s+/g, " ");
+	if (trimmed.length < 1 || trimmed.length > 40) {
+		throw new Error("Channel name must be between 1 and 40 characters");
+	}
+	return trimmed;
+}
 
 export const listForWorkspace = internalQuery({
 	args: { workspaceId: v.id("workspaces") },
@@ -126,6 +135,36 @@ export const deleteChannelRow = internalMutation({
 	},
 });
 
+export const renameChannelData = internalMutation({
+	args: {
+		channelId: v.id("channels"),
+		name: v.string(),
+	},
+	handler: async (ctx, { channelId, name }) => {
+		const channel = await ctx.db.get(channelId);
+		if (!channel) throw new Error("Channel not found");
+
+		const base = slugifyChannelName(name) || "channel";
+		let slug = base;
+		let suffix = 2;
+
+		while (true) {
+			const existing = await ctx.db
+				.query("channels")
+				.withIndex("workspaceId_name", (q) =>
+					q.eq("workspaceId", channel.workspaceId).eq("name", slug),
+				)
+				.first();
+			if (!existing || existing._id === channelId) break;
+			slug = `${base}-${suffix}`;
+			suffix += 1;
+		}
+
+		await ctx.db.patch(channelId, { name: slug });
+		return { name: slug };
+	},
+});
+
 export async function addUserToWorkspaceChannels(
 	ctx: ActionCtx,
 	auth: StreamServerAuth,
@@ -178,10 +217,7 @@ export const createChannel = action({
 		const userId = String(user._id);
 		await requireMembershipForAction(ctx, workspaceId, userId);
 
-		const trimmed = name.trim().replace(/\s+/g, " ");
-		if (trimmed.length < 1 || trimmed.length > 40) {
-			throw new Error("Channel name must be between 1 and 40 characters");
-		}
+		const trimmed = normalizeChannelName(name);
 
 		const { channelId, streamId, name: slug } = await ctx.runMutation(
 			internal.channels.insertChannel,
@@ -220,5 +256,84 @@ export const createChannel = action({
 		}
 
 		return { channelId: streamId, name: slug };
+	},
+});
+
+export const renameChannel = action({
+	args: {
+		channelId: v.id("channels"),
+		name: v.string(),
+	},
+	handler: async (ctx, { channelId, name }): Promise<{ name: string }> => {
+		const user = await authComponent.getAuthUser(ctx);
+		const userId = String(user._id);
+		const channel = await ctx.runQuery(internal.channels.getChannelRow, {
+			channelId,
+		});
+		if (!channel) throw new Error("Channel not found");
+
+		const membership = await requireMembershipForAction(
+			ctx,
+			channel.workspaceId,
+			userId,
+		);
+		if (membership.role !== "owner" && membership.role !== "admin") {
+			throw new Error("You need admin access to rename channels");
+		}
+		if (channel.name === "general") {
+			throw new Error("The general channel can't be renamed");
+		}
+
+		const trimmed = normalizeChannelName(name);
+		const previousName = channel.name;
+		const { name: slug } = await ctx.runMutation(
+			internal.channels.renameChannelData,
+			{ channelId, name: trimmed },
+		);
+
+		try {
+			const auth = await getStreamServerAuth();
+			await updateStreamChannelName(auth, channel.streamId, trimmed);
+		} catch (error) {
+			await ctx.runMutation(internal.channels.renameChannelData, {
+				channelId,
+				name: previousName,
+			});
+			throw error;
+		}
+
+		return { name: slug };
+	},
+});
+
+export const deleteChannel = action({
+	args: {
+		channelId: v.id("channels"),
+	},
+	handler: async (ctx, { channelId }): Promise<{ ok: true }> => {
+		const user = await authComponent.getAuthUser(ctx);
+		const userId = String(user._id);
+		const channel = await ctx.runQuery(internal.channels.getChannelRow, {
+			channelId,
+		});
+		if (!channel) throw new Error("Channel not found");
+
+		const membership = await requireMembershipForAction(
+			ctx,
+			channel.workspaceId,
+			userId,
+		);
+		if (membership.role !== "owner" && membership.role !== "admin") {
+			throw new Error("You need admin access to delete channels");
+		}
+		if (channel.name === "general") {
+			throw new Error("The general channel can't be deleted");
+		}
+
+		const auth = await getStreamServerAuth();
+		await deleteStreamChannel(auth, channel.streamId);
+		await ctx.runMutation(internal.channels.deleteChannelRow, { channelId });
+
+		return { ok: true };
 	},
 });

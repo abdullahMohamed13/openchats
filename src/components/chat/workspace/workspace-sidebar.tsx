@@ -4,10 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
+import { Button } from "@/components/ui/8bit/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "./sign-out-button";
-import type { CurrentUser, WorkspaceSummary } from "./types";
+import { SignOutButton } from "../sign-out-button";
+import { WorkspaceAvatar } from "./workspace-avatar";
+import type { CurrentUser, WorkspaceSummary } from "@/types/chat";
 
 interface WorkspaceSidebarProps {
 	currentUser: CurrentUser;
@@ -15,12 +17,6 @@ interface WorkspaceSidebarProps {
 	activeWorkspaceId: string;
 	onCreateWorkspace: () => void;
 	onOpenSettings: () => void;
-}
-
-function workspaceInitials(name: string): string {
-	const [first = "", second = ""] = name.trim().split(/\s+/);
-	if (second) return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
-	return name.slice(0, 2).toUpperCase();
 }
 
 export function WorkspaceSidebar({
@@ -62,54 +58,64 @@ export function WorkspaceSidebar({
 							aria-current={active ? "page" : undefined}
 							title={workspace.name}
 							className={cn(
-								"flex size-10 shrink-0 items-center justify-center rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
+								"flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
 								active
 									? "border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
 									: "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
 							)}
 						>
-							{workspaceInitials(workspace.name)}
+							<WorkspaceAvatar
+								name={workspace.name}
+								imageUrl={workspace.imageUrl}
+								className="size-full rounded-[6px]"
+							/>
 						</button>
 					);
 				})}
 
-				<button
+				<Button
 					type="button"
 					onClick={onCreateWorkspace}
 					aria-label="Create workspace"
 					title="Create workspace"
-					className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary"
+					variant="ghost"
+					size="sm"
+					className="size-10 shrink-0 rounded-lg border border-dashed border-border p-0 text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
 				>
 					<Plus width={18} height={18} />
-				</button>
+				</Button>
 			</div>
 
 			<div className="relative mt-auto flex flex-col items-center gap-3">
 				{needsOnboarding && (
-					<button
+					<Button
 						type="button"
 						onClick={() => router.push("/onboarding")}
 						aria-label="Finish your setup"
 						title="Finish your setup"
-						className="relative flex size-9 items-center justify-center rounded-lg border border-dashed border-primary text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+						variant="ghost"
+						size="sm"
+						className="relative size-9 rounded-lg border border-dashed border-primary p-0 text-primary hover:bg-primary hover:text-primary-foreground"
 					>
 						<Flag width={18} height={18} />
 						<span
 							className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border border-muted bg-accent"
 							aria-hidden
 						/>
-					</button>
+					</Button>
 				)}
 
-				<button
+				<Button
 					type="button"
 					onClick={onOpenSettings}
 					aria-label="Workspace settings"
 					title="Workspace settings"
-					className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+					variant="ghost"
+					size="sm"
+					className="size-9 rounded-lg p-0 text-muted-foreground hover:bg-background hover:text-foreground"
 				>
 					<Settings2 width={18} height={18} />
-				</button>
+				</Button>
 
 				<div className="relative">
 					<button

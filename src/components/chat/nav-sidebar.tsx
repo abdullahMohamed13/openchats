@@ -11,37 +11,18 @@ import {
 	Settings2,
 	UserPlus,
 } from "pixelarticons/react";
+import { Button } from "@/components/ui/8bit/button";
+import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
 import "@/styles/retro.css";
-import { ChannelItem } from "./channel-item";
-import { DMItem } from "./dm-item";
-import type {
-	ChannelSummary,
-	DirectMessageSummary,
-	WorkspaceSummary,
-} from "./types";
-
-interface NavSidebarProps {
-	workspaceName: string;
-	workspaces: WorkspaceSummary[];
-	activeWorkspaceId: string;
-	canManageWorkspace: boolean;
-	currentUserBadge?: string;
-	channels: ChannelSummary[];
-	dms: DirectMessageSummary[];
-	activeConversationId: string;
-	onSelectConversation: (id: string) => void;
-	onSelectWorkspace: (id: string) => void;
-	onCreateWorkspace: () => void;
-	onCreateChannel: () => void;
-	onOpenInvite: () => void;
-	onOpenSettings: () => void;
-	open?: boolean;
-	onClose?: () => void;
-}
+import { ChannelItem } from "./channel/channel-item";
+import { DMItem } from "./dm/dm-item";
+import { WorkspaceAvatar } from "./workspace/workspace-avatar";
+import { NavSidebarProps } from "@/types/navbar";
 
 export function NavSidebar({
 	workspaceName,
+	workspaceImageUrl,
 	workspaces,
 	activeWorkspaceId,
 	canManageWorkspace,
@@ -53,9 +34,11 @@ export function NavSidebar({
 	onSelectWorkspace,
 	onCreateWorkspace,
 	onCreateChannel,
+	onStartDirectMessage,
 	onOpenInvite,
 	onOpenSettings,
 	open,
+	collapsed,
 	onClose,
 }: NavSidebarProps) {
 	const [channelsOpen, setChannelsOpen] = useState(true);
@@ -73,7 +56,7 @@ export function NavSidebar({
 		: dms;
 
 	return (
-		<div className={cn("pointer-events-none absolute inset-0 z-30 flex lg:static", open && "pointer-events-auto")}>
+		<div className={cn("pointer-events-none absolute inset-0 z-30 flex lg:static", open && "pointer-events-auto", collapsed && "lg:hidden")}>
 			{open && <button type="button" aria-label="Close navigation" className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={onClose} />}
 
 			<nav
@@ -90,9 +73,15 @@ export function NavSidebar({
 							onClick={() => setMenuOpen((value) => !value)}
 							aria-expanded={menuOpen}
 							aria-haspopup="menu"
-							className="flex min-w-0 items-center gap-1.5 text-foreground"
+							className="flex w-full min-w-0 items-center gap-1.5 text-foreground"
 						>
-							<h2 className="truncate font-press-start text-[11px] uppercase">{workspaceName}</h2>
+							<WorkspaceAvatar
+								name={workspaceName}
+								imageUrl={workspaceImageUrl}
+								className="size-6 shrink-0 rounded border border-border"
+								initialsClassName="text-[8px]"
+							/>
+							<h2 className="min-w-0 truncate font-press-start text-[11px] uppercase">{workspaceName}</h2>
 							<ChevronDown width={14} height={14} className="shrink-0 text-muted-foreground" aria-hidden />
 						</button>
 
@@ -123,6 +112,12 @@ export function NavSidebar({
 												}}
 												className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 											>
+												<WorkspaceAvatar
+													name={workspace.name}
+													imageUrl={workspace.imageUrl}
+													className="size-5 shrink-0 rounded border border-border"
+													initialsClassName="text-[7px]"
+												/>
 												<span className="min-w-0 flex-1 truncate">{workspace.name}</span>
 												{workspace._id === activeWorkspaceId && (
 													<Check width={14} height={14} className="shrink-0 text-primary" aria-hidden />
@@ -162,28 +157,33 @@ export function NavSidebar({
 							</>
 						)}
 					</div>
-					<button
+					<Button
 						type="button"
 						aria-label="Close navigation"
 						onClick={onClose}
-						className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+						variant="ghost"
+						size="icon"
+						className="mx-0 size-7 text-muted-foreground lg:hidden"
 					>
 						<Close width={16} height={16} />
-					</button>
+					</Button>
 				</div>
 
-				<div className="px-3 py-2">
-					<label className="relative block">
-						<span className="sr-only">Search</span>
-						<Search width={16} height={16} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
-						<input
-							type="search"
-							value={query}
-							onChange={(event) => setQuery(event.target.value)}
-							placeholder="Search"
-							className="w-full rounded-md border border-border bg-muted py-1.5 pl-8 pr-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-						/>
-					</label>
+				<div className="relative px-3 py-2">
+					<Search
+						width={16}
+						height={16}
+						className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
+						aria-hidden
+					/>
+					<Input
+						type="search"
+						value={query}
+						onChange={(event) => setQuery(event.target.value)}
+						placeholder="Search"
+						aria-label="Search"
+						style={{ paddingLeft: "2rem" }}
+					/>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-2 pb-3">
@@ -192,13 +192,16 @@ export function NavSidebar({
 						open={channelsOpen}
 						onToggle={() => setChannelsOpen((open) => !open)}
 						action={
-							<button
+							<Button
 								type="button"
 								aria-label="Create channel"
 								onClick={onCreateChannel}
-								className="flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+								variant="ghost"
+								size="sm"
+								className="size-5 p-0 text-muted-foreground"
 							>
-								+</button>
+								+
+							</Button>
 						}
 					/>
 					{channelsOpen &&
@@ -225,24 +228,28 @@ export function NavSidebar({
 						open={dmsOpen}
 						onToggle={() => setDmsOpen((open) => !open)}
 						action={
-							badgeBroken ? (
-								<Plus
-									width={12}
-									height={12}
-									aria-label="Start a new direct message"
-									className="cursor-pointer hover:opacity-80"
-								/>
-							) : (
-								<Image
-									src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
-									alt="New direct message"
-									width={12}
-									height={12}
-									title="Start a new direct message"
-									onError={() => setBadgeBroken(true)}
-									className="pixelated cursor-pointer hover:opacity-80"
-								/>
-							)
+							<Button
+								type="button"
+								aria-label="Start a new direct message"
+								title="Start a new direct message"
+								onClick={onStartDirectMessage}
+								variant="ghost"
+								size="sm"
+								className="size-5 p-0 text-muted-foreground"
+							>
+								{badgeBroken ? (
+									<Plus width={12} height={12} aria-hidden />
+								) : (
+									<Image
+										src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
+										alt=""
+										width={12}
+										height={12}
+										onError={() => setBadgeBroken(true)}
+										className="pixelated"
+									/>
+								)}
+							</Button>
 						}
 					/>
 					{dmsOpen &&
