@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { UnreadBadge } from "../unread-badge";
+import { UnreadBadge } from "../UnreadBadge";
 import type { UserStatus } from "@/types/chat";
 
 interface DMItemProps {

@@ -1,5 +1,5 @@
 import { Menu, Search, Bell, Settings2 } from "pixelarticons/react";
-import { UnreadBadge } from "../unread-badge";
+import { UnreadBadge } from "../UnreadBadge";
 import { ConversationHeaderProps } from "@/types/conversation";
 import { IconButton } from "./IconButton";
 

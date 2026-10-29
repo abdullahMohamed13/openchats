@@ -7,8 +7,8 @@ import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
 import { Button } from "@/components/ui/8bit/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "../sign-out-button";
-import { WorkspaceAvatar } from "./workspace-avatar";
+import { SignOutButton } from "../SignOutButton";
+import { WorkspaceAvatar } from "./WorkspaceAvatar";
 import type { CurrentUser, WorkspaceSummary } from "@/types/chat";
 
 interface WorkspaceSidebarProps {

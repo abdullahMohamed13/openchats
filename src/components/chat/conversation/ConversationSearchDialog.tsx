@@ -10,7 +10,7 @@ import {
 } from "stream-chat-react";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
-import { HighlightedText } from "./highlighted-text";
+import { HighlightedText } from "./HighlightedText";
 import { ConversationSearchDialogProps } from "@/types/conversation";
 
 function messageText(message: MessageResponse): string {

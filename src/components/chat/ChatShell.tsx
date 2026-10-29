@@ -15,16 +15,16 @@ import { useConversations } from "@/hooks/use-conversations";
 // Icons
 import { Menu } from "pixelarticons/react";
 // Components
-import { WorkspaceSidebar } from "./workspace/workspace-sidebar";
-import { NavSidebar } from "./nav-sidebar";
-import { ConversationArea } from "./conversation/conversation-area";
-import { CreateWorkspaceDialog } from "./workspace/create-workspace-dialog";
-import { CreateChannelDialog } from "./channel/create-channel-dialog";
-import { InviteDialog } from "./invite/invite-dialog";
-import { WorkspaceSettingsDialog } from "./workspace/workspace-settings-dialog";
-import { ChannelSettingsDialog } from "./channel/channel-settings-dialog";
-import { NewDirectMessageDialog } from "./dm/new-direct-message-dialog";
-import { NotificationsDialog } from "./notifications/notifications-dialog";
+import { WorkspaceSidebar } from "./workspace/WorkspaceSidebar";
+import { NavSidebar } from "./NavSidebar";
+import { ConversationArea } from "./conversation/ConversationArea";
+import { CreateWorkspaceDialog } from "./workspace/CreateWorkspaceDialog";
+import { CreateChannelDialog } from "./channel/CreateChannelDialog";
+import { InviteDialog } from "./invite/InviteDialog";
+import { WorkspaceSettingsDialog } from "./workspace/WorkspaceSettingsDialog";
+import { ChannelSettingsDialog } from "./channel/ChannelSettingsDialog";
+import { NewDirectMessageDialog } from "./dm/NewDirectMessageDialog";
+import { NotificationsDialog } from "./notifications/NotificationsDialog";
 
 interface ChatShellProps {
 	workspaceId: Id<"workspaces">;

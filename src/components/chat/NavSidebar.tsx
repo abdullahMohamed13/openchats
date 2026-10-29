@@ -15,9 +15,9 @@ import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
 import "@/styles/retro.css";
-import { ChannelItem } from "./channel/channel-item";
-import { DMItem } from "./dm/dm-item";
-import { WorkspaceAvatar } from "./workspace/workspace-avatar";
+import { ChannelItem } from "./channel/ChannelItem";
+import { DMItem } from "./dm/DMItem";
+import { WorkspaceAvatar } from "./workspace/WorkspaceAvatar";
 import { NavSidebarProps } from "@/types/navbar";
 
 export function NavSidebar({
