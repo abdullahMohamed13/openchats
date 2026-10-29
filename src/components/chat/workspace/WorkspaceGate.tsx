@@ -18,7 +18,7 @@ export function WorkspaceGate() {
 
 	useEffect(() => {
 		if (firstWorkspace) {
-			router.replace(`/w/${firstWorkspace._id}`);
+			router.replace(`/chat/w/${firstWorkspace._id}`);
 		}
 	}, [firstWorkspace, router]);
 

@@ -43,7 +43,7 @@ export function CreateWorkspaceDialog({ onClose }: CreateWorkspaceDialogProps) {
 			const { workspaceId } = await createWorkspace({ name: trimmed });
 			setName("");
 			onClose();
-			router.push(`/w/${workspaceId}`);
+			router.push(`/chat/w/${workspaceId}`);
 		} catch (cause) {
 			setError(getErrorMessage(cause, "Could not create the workspace."));
 		} finally {

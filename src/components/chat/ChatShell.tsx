@@ -133,7 +133,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 
 	const handleSelectWorkspace = (id: string) => {
 		setNavOpen(false);
-		if (id !== workspaceId) router.push(`/w/${id}`);
+		if (id !== workspaceId) router.push(`/chat/w/${id}`);
 	};
 
 	const handleOpenNotifications = () => {

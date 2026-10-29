@@ -53,7 +53,7 @@ export function WorkspaceSidebar({
 						<button
 							key={workspace._id}
 							type="button"
-							onClick={() => router.push(`/w/${workspace._id}`)}
+							onClick={() => router.push(`/chat/w/${workspace._id}`)}
 							aria-label={`Open ${workspace.name}`}
 							aria-current={active ? "page" : undefined}
 							title={workspace.name}
