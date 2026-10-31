@@ -33,12 +33,16 @@ interface ChatShellProps {
 
 export function ChatShell({ workspaceId }: ChatShellProps) {
 	const router = useRouter();
-	const workspaces = useQuery(api.workspaces.listMyWorkspaces);
-	const dbChannels = useQuery(api.channels.listWorkspaceChannels, {
-		workspaceId,
-	});
+	const { data: session, isPending } = authClient.useSession();
+	const workspaces = useQuery(
+		api.workspaces.listMyWorkspaces,
+		session ? undefined : "skip",
+	);
+	const dbChannels = useQuery(
+		api.channels.listWorkspaceChannels,
+		session ? { workspaceId } : "skip",
+	);
 	const { client } = useChatContext();
-	const { data: session } = authClient.useSession();
 	const { channels, dms, loading, refresh } = useConversations(
 		client,
 		workspaceId,
