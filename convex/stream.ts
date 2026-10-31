@@ -224,6 +224,22 @@ export async function updateStreamChannelName(
 	}
 }
 
+export const syncStreamProfile = action({
+	args: {},
+	handler: async (ctx): Promise<{ ok: true }> => {
+		const user = await authComponent.getAuthUser(ctx);
+		const auth = await getStreamServerAuth();
+
+		const userId = String(user._id);
+		const name = user.name?.trim() || user.username || user.email || userId;
+		const image = user.image ?? undefined;
+
+		await upsertStreamUser(auth, { id: userId, name, image });
+
+		return { ok: true };
+	},
+});
+
 export const generateStreamToken = action({
 	args: {},
 	handler: async (ctx) => {

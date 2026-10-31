@@ -22,6 +22,7 @@ export const tables = {
     createdAt: v.number(),
     updatedAt: v.number(),
     userId: v.optional(v.union(v.null(), v.string())),
+    isAnonymous: v.optional(v.union(v.null(), v.boolean())),
     callEnabled: v.optional(v.union(v.null(), v.boolean())),
     phone: v.optional(v.union(v.null(), v.string())),
     phoneVerified: v.optional(v.union(v.null(), v.boolean())),

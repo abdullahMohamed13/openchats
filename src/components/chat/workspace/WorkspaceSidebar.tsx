@@ -17,6 +17,7 @@ interface WorkspaceSidebarProps {
 	activeWorkspaceId: string;
 	onCreateWorkspace: () => void;
 	onOpenSettings: () => void;
+	onEditProfile: () => void;
 }
 
 export function WorkspaceSidebar({
@@ -25,6 +26,7 @@ export function WorkspaceSidebar({
 	activeWorkspaceId,
 	onCreateWorkspace,
 	onOpenSettings,
+	onEditProfile,
 }: WorkspaceSidebarProps) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const { data: session, isPending } = authClient.useSession();
@@ -164,6 +166,10 @@ export function WorkspaceSidebar({
 								<div className="flex flex-col p-1">
 									<button
 										type="button"
+										onClick={() => {
+											setMenuOpen(false);
+											onEditProfile();
+										}}
 										className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 									>
 										<MoreVertical width={16} height={16} aria-hidden />

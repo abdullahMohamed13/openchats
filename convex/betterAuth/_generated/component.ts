@@ -37,6 +37,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email: string;
                   emailVerified: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name: string;
                   onboarded?: null | boolean;
                   phone?: null | string;
@@ -119,6 +120,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "createdAt"
                     | "updatedAt"
                     | "userId"
+                    | "isAnonymous"
                     | "callEnabled"
                     | "phone"
                     | "phoneVerified"
@@ -319,6 +321,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "createdAt"
                     | "updatedAt"
                     | "userId"
+                    | "isAnonymous"
                     | "callEnabled"
                     | "phone"
                     | "phoneVerified"
@@ -579,6 +582,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name?: string;
                   onboarded?: null | boolean;
                   phone?: null | string;
@@ -598,6 +602,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "createdAt"
                     | "updatedAt"
                     | "userId"
+                    | "isAnonymous"
                     | "callEnabled"
                     | "phone"
                     | "phoneVerified"
@@ -831,6 +836,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name?: string;
                   onboarded?: null | boolean;
                   phone?: null | string;
@@ -850,6 +856,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "createdAt"
                     | "updatedAt"
                     | "userId"
+                    | "isAnonymous"
                     | "callEnabled"
                     | "phone"
                     | "phoneVerified"
