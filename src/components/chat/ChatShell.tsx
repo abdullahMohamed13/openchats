@@ -36,11 +36,11 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const { data: session, isPending } = authClient.useSession();
 	const workspaces = useQuery(
 		api.workspaces.listMyWorkspaces,
-		session ? undefined : "skip",
+		session && !isPending ? undefined : "skip",
 	);
 	const dbChannels = useQuery(
 		api.channels.listWorkspaceChannels,
-		session ? { workspaceId } : "skip",
+		session && !isPending ? { workspaceId } : "skip",
 	);
 	const { client } = useChatContext();
 	const { channels, dms, loading, refresh } = useConversations(
