@@ -95,6 +95,11 @@ export function useConversations(
 		client.on("notification.removed_from_channel", removeChannel);
 		client.on("notification.removed_from_channel", refresh);
 		client.on("notification.message_new", refresh);
+		client.on("message.new", refresh);
+		client.on("message.read", refresh);
+		client.on("message.read_locally", refresh);
+		client.on("notification.mark_read", refresh);
+		client.on("notification.mark_unread", refresh);
 
 		return () => {
 			active = false;
@@ -109,6 +114,11 @@ export function useConversations(
 			client.off("notification.removed_from_channel", removeChannel);
 			client.off("notification.removed_from_channel", refresh);
 			client.off("notification.message_new", refresh);
+			client.off("message.new", refresh);
+			client.off("message.read", refresh);
+			client.off("message.read_locally", refresh);
+			client.off("notification.mark_read", refresh);
+			client.off("notification.mark_unread", refresh);
 		};
 	}, [client, workspaceId]);
 

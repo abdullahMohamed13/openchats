@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Lock, Loading, Eye, EyeOff } from "pixelarticons/react";
 import { handleResetPassword } from "@/lib/reset-password";
+import { authClient } from "@/lib/auth-client";
 import { PASSWORD_MIN_LENGTH, validateAuthField, type AuthFieldSpec } from "@/lib/auth-validation";
 import BrutalButton from "@/components/ui/brutal-button";
 
@@ -56,7 +57,12 @@ function ResetPasswordForm() {
 		}
 
 		const ok = await handleResetPassword({ newPassword, token, setLoading });
-		if (ok) router.push("/signin");
+		if (ok) {
+			// A successful reset revokes every session. Clear the local one too so
+			// the auth layout does not send a still-"signed in" user back to chat.
+			await authClient.signOut().catch(() => {});
+			router.push("/signin");
+		}
 	};
 
 	if (tokenError || !token) {
@@ -106,15 +112,6 @@ function ResetPasswordForm() {
 						/>
 						<button
 							type="button"
-							onClick={() => setRevealed((p) => ({ ...p, confirm: !p.confirm }))}
-							aria-label={revealed.confirm ? "Hide confirm password" : "Show confirm password"}
-							aria-pressed={revealed.confirm}
-							className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-accent"
-						>
-							{revealed.confirm ? <EyeOff width={18} height={18} aria-hidden /> : <Eye width={18} height={18} aria-hidden />}
-						</button>
-						<button
-							type="button"
 							onClick={() => setRevealed((p) => ({ ...p, new: !p.new }))}
 							aria-label={revealed.new ? "Hide new password" : "Show new password"}
 							aria-pressed={revealed.new}
@@ -145,6 +142,15 @@ function ResetPasswordForm() {
 							aria-invalid={error ? true : undefined}
 							className="retro h-12 w-full rounded-none border-2 border-foreground bg-background pl-10 text-sm outline-none transition-all dark:border-ring focus-visible:border-accent focus-visible:shadow-[3px_3px_0px_var(--accent)]"
 						/>
+						<button
+							type="button"
+							onClick={() => setRevealed((p) => ({ ...p, confirm: !p.confirm }))}
+							aria-label={revealed.confirm ? "Hide confirm password" : "Show confirm password"}
+							aria-pressed={revealed.confirm}
+							className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-accent"
+						>
+							{revealed.confirm ? <EyeOff width={18} height={18} aria-hidden /> : <Eye width={18} height={18} aria-hidden />}
+						</button>
 					</div>
 				</div>
 
