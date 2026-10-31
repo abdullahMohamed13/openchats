@@ -3,6 +3,7 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
+import { anonymous } from "better-auth/plugins/anonymous";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
 import { sendPasswordResetEmail, toSiteUrl } from "./email";
@@ -94,7 +95,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				},
 			},
 		},
-		plugins: [convex({ authConfig })],
+		plugins: [convex({ authConfig }), anonymous()],
 	} satisfies BetterAuthOptions;
 };
 
