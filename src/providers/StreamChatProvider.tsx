@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StreamChat } from "stream-chat";
 import { Chat, WithComponents } from "stream-chat-react";
 import { Plus } from "pixelarticons/react";
@@ -22,47 +22,71 @@ export default function StreamChatProvider({ children }: {children: ReactNode })
 	const generateStreamToken = useAction(api.stream.generateStreamToken);
 	const [client, setClient] = useState<StreamChat | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	const connectingRef = useRef<Promise<void> | null>(null);
-	const connectedUserIdRef = useRef<string | null>(null);
 
 	const userId = session?.user?.id;
 	const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
 
+	// The Stream client is a singleton, so it must be disconnected when the chat
+	// UI goes away. Otherwise the previous account stays connected (and online).
 	useEffect(() => {
-		if (isPending || !userId || !apiKey) return;
+		if (!apiKey) return;
 
-		let active = true;
 		const instance = StreamChat.getInstance(apiKey);
+		return () => {
+			if (!instance.userID) return;
+			void instance.disconnectUser().catch(() => {});
+		};
+	}, [apiKey]);
 
-		if (connectedUserIdRef.current && connectedUserIdRef.current !== userId) {
-			connectedUserIdRef.current = null;
-			connectingRef.current = null;
-			instance.disconnectUser().catch(() => {});
-			setClient(null);
-		}
+	useEffect(() => {
+		if (isPending || !apiKey) return;
 
-		if (!connectingRef.current) {
-			connectingRef.current = (async () => {
-				if (instance.userID === userId) return;
-				const credentials = await generateStreamToken({});
-				await instance.connectUser(
-					{ id: credentials.userId, name: credentials.name, image: credentials.image },
-					credentials.token,
-				);
-				connectedUserIdRef.current = credentials.userId;
-			})();
-		}
+		const instance = StreamChat.getInstance(apiKey);
+		let active = true;
 
-		connectingRef.current
-			.then(() => {
-				if (active) setClient(instance);
-			})
-			.catch((err: unknown) => {
-				connectingRef.current = null;
+		const connect = async () => {
+			if (!userId) {
+				// The session ended while the provider was still mounted.
+				if (instance.userID) await instance.disconnectUser().catch(() => {});
+				if (active) setClient(null);
+				return;
+			}
+
+			if (instance.userID === userId) {
 				if (active) {
-					setError(err instanceof Error ? err.message : "Failed to connect to chat");
+					setError(null);
+					setClient(instance);
 				}
-			});
+				return;
+			}
+
+			// A previous account may still own the singleton after a sign-out or
+			// an account switch. connectUser() throws unless it is disconnected.
+			if (instance.userID) {
+				await instance.disconnectUser().catch(() => {});
+			}
+
+			if (!active) return;
+
+			const credentials = await generateStreamToken({});
+			if (!active) return;
+
+			await instance.connectUser(
+				{ id: credentials.userId, name: credentials.name, image: credentials.image },
+				credentials.token,
+			);
+
+			if (active) {
+				setError(null);
+				setClient(instance);
+			}
+		};
+
+		connect().catch((err: unknown) => {
+			if (active) {
+				setError(err instanceof Error ? err.message : "Failed to connect to chat");
+			}
+		});
 
 		return () => {
 			active = false;
