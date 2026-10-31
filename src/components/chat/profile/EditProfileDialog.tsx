@@ -76,7 +76,7 @@ export function EditProfileDialog({ onClose }: EditProfileDialogProps) {
 				session.user.id,
 			);
 			if (!cancelled) setUsernameStatus(availability);
-		}, 350);
+		}, 2000);
 
 		return () => {
 			cancelled = true;
