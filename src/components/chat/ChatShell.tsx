@@ -22,6 +22,7 @@ import { CreateWorkspaceDialog } from "./workspace/CreateWorkspaceDialog";
 import { CreateChannelDialog } from "./channel/CreateChannelDialog";
 import { InviteDialog } from "./invite/InviteDialog";
 import { WorkspaceSettingsDialog } from "./workspace/WorkspaceSettingsDialog";
+import { EditProfileDialog } from "./profile/EditProfileDialog";
 import { ChannelSettingsDialog } from "./channel/ChannelSettingsDialog";
 import { NewDirectMessageDialog } from "./dm/NewDirectMessageDialog";
 import { NotificationsDialog } from "./notifications/NotificationsDialog";
@@ -51,6 +52,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const [inviteOpen, setInviteOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [profileOpen, setProfileOpen] = useState(false);
 	const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
 
 	const currentUser = useMemo<CurrentUser>(() => {
@@ -181,6 +183,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				activeWorkspaceId={workspaceId}
 				onCreateWorkspace={() => setCreateWorkspaceOpen(true)}
 				onOpenSettings={() => setSettingsOpen(true)}
+				onEditProfile={() => setProfileOpen(true)}
 			/>
 
 			<NavSidebar
@@ -276,6 +279,9 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 						setInviteOpen(true);
 					}}
 				/>
+			)}
+			{profileOpen && (
+				<EditProfileDialog onClose={() => setProfileOpen(false)} />
 			)}
 			{channelSettingsOpen && activeChannel && activeChannelRow && (
 				<ChannelSettingsDialog

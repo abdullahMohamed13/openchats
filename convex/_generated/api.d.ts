@@ -15,6 +15,7 @@ import type * as channels from "../channels.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as invites from "../invites.js";
+import type * as profile from "../profile.js";
 import type * as stream from "../stream.js";
 import type * as username from "../username.js";
 import type * as workspaces from "../workspaces.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   http: typeof http;
   invites: typeof invites;
+  profile: typeof profile;
   stream: typeof stream;
   username: typeof username;
   workspaces: typeof workspaces;

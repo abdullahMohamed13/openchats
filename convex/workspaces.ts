@@ -314,6 +314,42 @@ export const setMemberRoleInternal = internalMutation({
 	},
 });
 
+export const transferOwnershipData = internalMutation({
+	args: {
+		workspaceId: v.id("workspaces"),
+		currentOwnerId: v.string(),
+		newOwnerId: v.string(),
+	},
+	handler: async (ctx, { workspaceId, currentOwnerId, newOwnerId }) => {
+		const workspace = await ctx.db.get(workspaceId);
+		if (!workspace) throw new Error("Workspace not found");
+		if (workspace.ownerId !== currentOwnerId) {
+			throw new Error("Ownership changed. Refresh and try again.");
+		}
+
+		const newOwner = await ctx.db
+			.query("workspaceMembers")
+			.withIndex("workspaceId_userId", (q) =>
+				q.eq("workspaceId", workspaceId).eq("userId", newOwnerId),
+			)
+			.first();
+		if (!newOwner) {
+			throw new Error("That person is not a member of this workspace");
+		}
+
+		const oldOwner = await ctx.db
+			.query("workspaceMembers")
+			.withIndex("workspaceId_userId", (q) =>
+				q.eq("workspaceId", workspaceId).eq("userId", currentOwnerId),
+			)
+			.first();
+
+		await ctx.db.patch(workspaceId, { ownerId: newOwnerId });
+		await ctx.db.patch(newOwner._id, { role: "owner" });
+		if (oldOwner) await ctx.db.patch(oldOwner._id, { role: "admin" });
+	},
+});
+
 export const renameWorkspaceData = internalMutation({
 	args: {
 		workspaceId: v.id("workspaces"),
@@ -568,6 +604,47 @@ export const setMemberRole = action({
 			workspaceId,
 			userId: targetUserId,
 			role,
+		});
+
+		return { ok: true };
+	},
+});
+
+export const transferOwnership = action({
+	args: {
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+	},
+	handler: async (
+		ctx,
+		{ workspaceId, userId: newOwnerId },
+	): Promise<{ ok: true }> => {
+		const actorId = await getAuthUserId(ctx);
+		const actor = await requireMembershipForAction(
+			ctx,
+			workspaceId,
+			actorId,
+		);
+
+		if (actor.role !== "owner") {
+			throw new Error("Only the workspace owner can transfer ownership");
+		}
+		if (newOwnerId === actorId) {
+			throw new Error("You already own this workspace");
+		}
+
+		const target = await ctx.runQuery(
+			internal.access.getMembershipInternal,
+			{ workspaceId, userId: newOwnerId },
+		);
+		if (!target) {
+			throw new Error("That person is not a member of this workspace");
+		}
+
+		await ctx.runMutation(internal.workspaces.transferOwnershipData, {
+			workspaceId,
+			currentOwnerId: actorId,
+			newOwnerId,
 		});
 
 		return { ok: true };

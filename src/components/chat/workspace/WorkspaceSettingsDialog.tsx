@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
-import { Logout, Trash, UserMinus, UserPlus } from "pixelarticons/react";
+import { Logout, Trash, UserMinus, UserPlus, Crown } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
@@ -52,6 +52,7 @@ export function WorkspaceSettingsDialog({
 	const members = useQuery(api.workspaces.listMembers, { workspaceId });
 	const renameWorkspace = useAction(api.workspaces.renameWorkspace);
 	const setMemberRole = useAction(api.workspaces.setMemberRole);
+	const transferOwnership = useAction(api.workspaces.transferOwnership);
 	const removeMember = useAction(api.workspaces.removeMember);
 	const leaveWorkspace = useAction(api.workspaces.leaveWorkspace);
 	const deleteWorkspace = useAction(api.workspaces.deleteWorkspace);
@@ -73,6 +74,9 @@ export function WorkspaceSettingsDialog({
 	const [imageSaved, setImageSaved] = useState(false);
 	const [removingId, setRemovingId] = useState<string | null>(null);
 	const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+	const [transferringId, setTransferringId] = useState<string | null>(null);
+	const [confirmTransferId, setConfirmTransferId] = useState<string | null>(null);
+	const [transferNotice, setTransferNotice] = useState<string | null>(null);
 	const [confirmLeave, setConfirmLeave] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [leaving, setLeaving] = useState(false);
@@ -86,7 +90,8 @@ export function WorkspaceSettingsDialog({
 		leaving ||
 		deleting ||
 		removingId !== null ||
-		changingRoleId !== null;
+		changingRoleId !== null ||
+		transferringId !== null;
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -193,8 +198,31 @@ export function WorkspaceSettingsDialog({
 		}
 	};
 
-	const handleRemove = async (member: WorkspaceMember) => {
-		setRemovingId(member.userId);
+	const handleTransfer = async (member: WorkspaceMember) => {
+		if (confirmTransferId !== member.userId) {
+			setConfirmTransferId(member.userId);
+			setTransferNotice(null);
+			setError(null);
+			return;
+		}
+
+		setTransferringId(member.userId);
+		setError(null);
+		try {
+			await transferOwnership({ workspaceId, userId: member.userId });
+			setConfirmTransferId(null);
+			setTransferNotice(
+				`Ownership transferred to ${member.name}. You are now an admin.`,
+			);
+		} catch (cause) {
+			setError(getErrorMessage(cause, "Could not transfer ownership."));
+			setConfirmTransferId(null);
+		} finally {
+			setTransferringId(null);
+		}
+	};
+
+	const handleRemove = async (member: WorkspaceMember) => {		setRemovingId(member.userId);
 		setError(null);
 		try {
 			await removeMember({ workspaceId, userId: member.userId });
@@ -251,6 +279,14 @@ export function WorkspaceSettingsDialog({
 	const canChangeRole = (member: WorkspaceMember): boolean => {
 		if (!isOwner) return false;
 		if (busy && changingRoleId !== member.userId) return false;
+		if (member.userId === session?.user.id) return false;
+		if (member.role === "owner") return false;
+		return true;
+	};
+
+	const canTransferOwnership = (member: WorkspaceMember): boolean => {
+		if (!isOwner) return false;
+		if (busy && transferringId !== member.userId) return false;
 		if (member.userId === session?.user.id) return false;
 		if (member.role === "owner") return false;
 		return true;
@@ -404,7 +440,7 @@ export function WorkspaceSettingsDialog({
 								{members.map((member) => (
 									<li
 										key={member.userId}
-										className="flex items-center gap-3 py-2.5"
+										className="flex flex-wrap items-center gap-3 py-2.5"
 									>
 										<Image
 											src={member.image ?? DEFAULT_AVATAR}
@@ -436,6 +472,33 @@ export function WorkspaceSettingsDialog({
 										>
 											{roleLabel(member.role)}
 										</span>
+										{canTransferOwnership(member) && (
+											<Button
+												type="button"
+												onClick={() => void handleTransfer(member)}
+												disabled={transferringId !== null}
+												aria-label={`Make ${member.name} the workspace owner`}
+												title={`Make ${member.name} the workspace owner`}
+												variant={
+													confirmTransferId === member.userId
+														? "destructive"
+														: "outline"
+												}
+												size="sm"
+												className="h-auto shrink-0 gap-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide"
+											>
+												{transferringId === member.userId ? (
+													"…"
+												) : confirmTransferId === member.userId ? (
+													"Confirm?"
+												) : (
+													<>
+														<Crown width={12} height={12} aria-hidden />
+														Make owner
+													</>
+												)}
+											</Button>
+										)}
 										{canChangeRole(member) && (
 											<Button
 												type="button"
@@ -483,6 +546,11 @@ export function WorkspaceSettingsDialog({
 									</li>
 								))}
 							</ul>
+						)}
+						{transferNotice && (
+							<p role="status" className="mt-3 text-xs text-success">
+								{transferNotice}
+							</p>
 						)}
 					</section>
 
