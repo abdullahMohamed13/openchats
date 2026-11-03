@@ -10,9 +10,7 @@ export const handleGuestSignIn = async ({ setLoading }: AuthSetLoading) => {
 			onRequest: () => setLoading?.(true),
 			onSuccess: () => {
 				setLoading?.(false);
-				// A full reload makes sure the new session is picked up before the
-				// onboarding guard runs.
-				// eslint-disable-next-line @next/next/no-location-assign-relative-destination
+				// The guest setup will be handled by OnboardingWizard component
 				window.location.assign("/onboarding");
 			},
 			onError: (ctx: ErrorContext) => {

@@ -1,6 +1,6 @@
 export type UserStatus = "online" | "away" | "offline";
 
-export const DEFAULT_AVATAR = "/images/characters/waltuh.webp";
+export const DEFAULT_AVATAR = "/images/guest-avatar.png";
 
 export interface ChannelSummary {
 	id: string;

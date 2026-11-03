@@ -12,11 +12,11 @@ export interface NavSidebarProps {
 	activeConversationId: string;
 	onSelectConversation: (id: string) => void;
 	onSelectWorkspace: (id: string) => void;
-	onCreateWorkspace: () => void;
-	onCreateChannel: () => void;
-	onStartDirectMessage: () => void;
-	onOpenInvite: () => void;
-	onOpenSettings: () => void;
+	onCreateWorkspace?: () => void;
+	onCreateChannel?: () => void;
+	onStartDirectMessage?: () => void;
+	onOpenInvite?: () => void;
+	onOpenSettings?: () => void;
 	open?: boolean;
 	collapsed?: boolean;
 	onClose?: () => void;
