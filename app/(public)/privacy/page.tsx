@@ -6,7 +6,7 @@ import {
 	LegalSubTitle,
 	LegalText,
 	type TocItem,
-} from "@/components/sections/Legal";
+} from "@/components/guest/Legal";
 
 export const metadata: Metadata = {
 	title: "Privacy Policy",
