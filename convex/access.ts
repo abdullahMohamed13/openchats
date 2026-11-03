@@ -25,7 +25,8 @@ export async function getAuthUserId(ctx: AuthCtx): Promise<string> {
  */
 export async function requireFullAccount(ctx: AuthCtx) {
 	const user = await authComponent.getAuthUser(ctx);
-	if (user.isAnonymous) {
+	const isAnonymous = "isAnonymous" in user && user.isAnonymous === true;
+	if (isAnonymous) {
 		throw new Error("Create an account to use this feature");
 	}
 	return user;
