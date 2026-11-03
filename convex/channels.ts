@@ -9,7 +9,7 @@ import {
 	query,
 	type ActionCtx,
 } from "./_generated/server";
-import { getAuthUserId, requireMembership, requireMembershipForAction } from "./access";
+import { getAuthUserId, requireFullAccount, requireMembership, requireMembershipForAction } from "./access";
 import { authComponent } from "./auth";
 import {
 	addUserToChannel,
@@ -17,11 +17,11 @@ import {
 	deleteStreamChannel,
 	getStreamServerAuth,
 	removeUserFromChannel,
-	slugifyChannelName,
 	updateStreamChannelName,
 	upsertStreamUser,
 	type StreamServerAuth,
 } from "./stream";
+import { slugifyName } from "./utils/slugifyName";
 
 function normalizeChannelName(value: string): string {
 	const trimmed = value.trim().replace(/\s+/g, " ");
@@ -100,7 +100,7 @@ export const insertChannel = internalMutation({
 		createdBy: v.string(),
 	},
 	handler: async (ctx, { workspaceId, name, createdBy }) => {
-		const base = slugifyChannelName(name) || "channel";
+		const base = slugifyName(name) || "channel";
 		let slug = base;
 		let suffix = 2;
 
@@ -144,7 +144,7 @@ export const renameChannelData = internalMutation({
 		const channel = await ctx.db.get(channelId);
 		if (!channel) throw new Error("Channel not found");
 
-		const base = slugifyChannelName(name) || "channel";
+		const base = slugifyName(name) || "channel";
 		let slug = base;
 		let suffix = 2;
 
@@ -214,6 +214,7 @@ export const createChannel = action({
 	},
 	handler: async (ctx, { workspaceId, name }): Promise<{ channelId: string; name: string }> => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		await requireMembershipForAction(ctx, workspaceId, userId);
 
@@ -231,7 +232,7 @@ export const createChannel = action({
 				name: string;
 				image: string | null;
 			}[] = await ctx.runQuery(
-				internal.workspaces.listMemberProfilesInternal,
+				internal.workspaceMembers.listMemberProfilesInternal,
 				{ workspaceId },
 			);
 
@@ -266,6 +267,7 @@ export const renameChannel = action({
 	},
 	handler: async (ctx, { channelId, name }): Promise<{ name: string }> => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		const channel = await ctx.runQuery(internal.channels.getChannelRow, {
 			channelId,
@@ -312,6 +314,7 @@ export const deleteChannel = action({
 	},
 	handler: async (ctx, { channelId }): Promise<{ ok: true }> => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		const channel = await ctx.runQuery(internal.channels.getChannelRow, {
 			channelId,

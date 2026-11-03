@@ -8,7 +8,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
-import { getAuthUserId, requireAdmin, requireAdminForAction } from "./access";
+import { getAuthUserId, requireAdmin, requireAdminForAction, requireFullAccount } from "./access";
 import { authComponent } from "./auth";
 import { addUserToWorkspaceChannels } from "./channels";
 import { sendWorkspaceInviteEmail } from "./email";
@@ -135,6 +135,7 @@ export const createLinkInvite = mutation({
 	args: { workspaceId: v.id("workspaces") },
 	handler: async (ctx, { workspaceId }) => {
 		const userId = await getAuthUserId(ctx);
+		await requireFullAccount(ctx);
 		await requireAdmin(ctx, workspaceId, userId);
 
 		const now = Date.now();
@@ -169,6 +170,7 @@ export const listWorkspaceInvites = query({
 	args: { workspaceId: v.id("workspaces") },
 	handler: async (ctx, { workspaceId }) => {
 		const userId = await getAuthUserId(ctx);
+		await requireFullAccount(ctx);
 		await requireAdmin(ctx, workspaceId, userId);
 
 		const invites = await ctx.db
@@ -205,6 +207,7 @@ export const revokeInvite = mutation({
 	},
 	handler: async (ctx, { workspaceId, inviteId }) => {
 		const userId = await getAuthUserId(ctx);
+		await requireFullAccount(ctx);
 		await requireAdmin(ctx, workspaceId, userId);
 
 		const invite = await ctx.db.get(inviteId);
@@ -223,6 +226,7 @@ export const inviteByEmail = action({
 	},
 	handler: async (ctx, { workspaceId, email }): Promise<{ status: "sent" | "already_member" }> => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		await requireAdminForAction(ctx, workspaceId, userId);
 
@@ -289,6 +293,7 @@ export const inviteByUsername = action({
 	},
 	handler: async (ctx, { workspaceId, username }): Promise<{ status: "added" | "already_member"; name: string }> => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		await requireAdminForAction(ctx, workspaceId, userId);
 
@@ -334,7 +339,7 @@ export const inviteByUsername = action({
 			return { status: "already_member", name: displayName };
 		}
 
-		await ctx.runMutation(internal.workspaces.addMemberInternal, {
+		await ctx.runMutation(internal.workspaceMembers.addMemberInternal, {
 			workspaceId,
 			userId: targetId,
 			role: "member",
@@ -355,7 +360,7 @@ export const inviteByUsername = action({
 export const acceptInvite = action({
 	args: { token: v.string() },
 	handler: async (ctx, { token }): Promise<{ workspaceId: string }> => {
-		const user = await authComponent.getAuthUser(ctx);
+		const user = await requireFullAccount(ctx);
 		const userId = String(user._id);
 
 		const invite = await ctx.runQuery(internal.invites.getInviteInternal, {
@@ -382,7 +387,7 @@ export const acceptInvite = action({
 			{ workspaceId: invite.workspaceId, userId },
 		);
 		if (!existing) {
-			await ctx.runMutation(internal.workspaces.addMemberInternal, {
+			await ctx.runMutation(internal.workspaceMembers.addMemberInternal, {
 				workspaceId: invite.workspaceId,
 				userId,
 				role: invite.role,
