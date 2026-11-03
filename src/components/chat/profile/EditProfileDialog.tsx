@@ -24,8 +24,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/8bit/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-const USERNAME_PATTERN = /^[a-z0-9_.]{3,20}$/;
+import { USERNAME_PATTERN } from "@/lib/username-pattern";
 
 interface EditProfileDialogProps {
 	onClose: () => void;
