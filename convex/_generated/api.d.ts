@@ -17,6 +17,10 @@ import type * as http from "../http.js";
 import type * as invites from "../invites.js";
 import type * as stream from "../stream.js";
 import type * as username from "../username.js";
+import type * as utils_normalizeWorkspaceName from "../utils/normalizeWorkspaceName.js";
+import type * as utils_slugifyName from "../utils/slugifyName.js";
+import type * as utils_workspaceNameKey from "../utils/workspaceNameKey.js";
+import type * as workspaceMembers from "../workspaceMembers.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -35,6 +39,10 @@ declare const fullApi: ApiFromModules<{
   invites: typeof invites;
   stream: typeof stream;
   username: typeof username;
+  "utils/normalizeWorkspaceName": typeof utils_normalizeWorkspaceName;
+  "utils/slugifyName": typeof utils_slugifyName;
+  "utils/workspaceNameKey": typeof utils_workspaceNameKey;
+  workspaceMembers: typeof workspaceMembers;
   workspaces: typeof workspaces;
 }>;
 
