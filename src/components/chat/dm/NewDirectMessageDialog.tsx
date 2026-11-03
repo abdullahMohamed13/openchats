@@ -11,6 +11,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { getErrorMessage } from "@/lib/error-message";
+import { roleLabel } from "@/lib/workspace-role";
 import { DEFAULT_AVATAR, type WorkspaceMember } from "@/types/chat";
 
 interface NewDirectMessageDialogProps {
@@ -19,19 +20,13 @@ interface NewDirectMessageDialogProps {
 	onCreated: (channelId: string) => void | Promise<void>;
 }
 
-function roleLabel(role: WorkspaceMember["role"]): string {
-	if (role === "owner") return "Owner";
-	if (role === "admin") return "Admin";
-	return "Member";
-}
-
 export function NewDirectMessageDialog({
 	workspaceId,
 	onClose,
 	onCreated,
 }: NewDirectMessageDialogProps) {
 	const { client } = useChatContext();
-	const members = useQuery(api.workspaces.listMembers, { workspaceId });
+	const members = useQuery(api.workspaceMembers.listMembers, { workspaceId });
 	const [query, setQuery] = useState("");
 	const [creatingId, setCreatingId] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
