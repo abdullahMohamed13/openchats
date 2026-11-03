@@ -1,5 +1,6 @@
 import { action } from "./_generated/server";
 import { authComponent } from "./auth";
+import { slugifyName } from "./utils/slugifyName";
 
 const STREAM_API_BASE = "https://chat.stream-io-api.com";
 
@@ -86,15 +87,6 @@ export async function upsertStreamUser(
 	}
 }
 
-export function slugifyChannelName(value: string): string {
-	return value
-		.toLowerCase()
-		.trim()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "")
-		.slice(0, 40);
-}
-
 function channelUrl(auth: StreamServerAuth, channelId: string): string {
 	return `${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channelId)}?api_key=${encodeURIComponent(auth.apiKey)}`;
 }
@@ -109,7 +101,7 @@ export async function createWorkspaceChannel(
 		memberIds?: string[];
 	},
 ): Promise<string> {
-	const slug = options.slug ?? (slugifyChannelName(options.name) || "channel");
+	const slug = options.slug ?? (slugifyName(options.name) || "channel");
 	const channelId = `${options.workspaceId}-${slug}`;
 	const base = `${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channelId)}`;
 	const query = `?api_key=${encodeURIComponent(auth.apiKey)}`;
@@ -149,6 +141,30 @@ export async function createWorkspaceChannel(
 	}
 
 	return channelId;
+}
+
+export async function sendChannelMessage(
+	auth: StreamServerAuth,
+	channelId: string,
+	userId: string,
+	text: string,
+): Promise<void> {
+	const response = await fetch(
+		`${STREAM_API_BASE}/channels/messaging/${encodeURIComponent(channelId)}/message?api_key=${encodeURIComponent(auth.apiKey)}`,
+		{
+			method: "POST",
+			headers: streamHeaders(auth.serverToken),
+			body: JSON.stringify({
+				message: { text },
+				user_id: userId,
+			}),
+		},
+	);
+	if (!response.ok) {
+		throw new Error(
+			`Failed to send a welcome message to ${channelId} (${response.status}): ${await response.text()}`,
+		);
+	}
 }
 
 export async function addUserToChannel(

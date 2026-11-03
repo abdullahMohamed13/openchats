@@ -1,10 +1,12 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
-import { components } from "./_generated/api";
+import { requireActionCtx } from "@convex-dev/better-auth/utils";
+import { components, internal } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
+import { APIError } from "better-auth/api";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import { anonymous } from "better-auth/plugins/anonymous";
-import authConfig from "./auth.config";
+import authConfig from "./config/auth.config";
 import authSchema from "./betterAuth/schema";
 import { sendPasswordResetEmail, toSiteUrl } from "./email";
 
@@ -30,10 +32,10 @@ const dynamicBaseURL = {
 	fallback: siteUrl,
 };
 
-export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+export const createAuthOptions = (convexCtx: GenericCtx<DataModel>) => {
 	return {
 		baseURL: dynamicBaseURL,
-		database: authComponent.adapter(ctx),
+		database: authComponent.adapter(convexCtx),
 		trustedOrigins: [
 			siteUrl,
 			"http://localhost:3000",
@@ -95,7 +97,53 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				},
 			},
 		},
-		plugins: [convex({ authConfig }), anonymous()],
+		databaseHooks: {
+			user: {
+				update: {
+					before: async (_data, context) => {
+						if (context?.context.session?.user?.isAnonymous) {
+							throw APIError.from("FORBIDDEN", {
+								code: "GUEST_PROFILE_LOCKED",
+								message: "Create an account to change your profile.",
+							});
+						}
+					},
+				},
+			},
+		},
+		plugins: [
+			convex({ authConfig }),
+			anonymous({
+				onLinkAccount: async ({ anonymousUser, newUser }) => {
+					try {
+						const actionCtx = requireActionCtx(convexCtx);
+						const { sharedWorkspaceId, privateWorkspaceId } =
+							await actionCtx.runMutation(
+								internal.guest.linkGuestToAccount,
+								{
+									anonymousUserId: anonymousUser.user.id,
+									newUserId: newUser.user.id,
+								},
+							);
+
+						await actionCtx.runAction(internal.guest.finalizeGuestUpgrade, {
+							anonymousUserId: anonymousUser.user.id,
+							newUserId: newUser.user.id,
+							newUserName:
+								newUser.user.name?.trim() ||
+								newUser.user.username ||
+								newUser.user.email ||
+								newUser.user.id,
+							newUserImage: newUser.user.image ?? undefined,
+							sharedWorkspaceId: sharedWorkspaceId ?? undefined,
+							privateWorkspaceId: privateWorkspaceId ?? undefined,
+						});
+					} catch (error) {
+						console.error("Failed to migrate guest data in onLinkAccount", error);
+					}
+				},
+			}),
+		],
 	} satisfies BetterAuthOptions;
 };
 

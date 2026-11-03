@@ -3,8 +3,8 @@ import { v } from "convex/values";
 import { components } from "./_generated/api";
 import { mutation } from "./_generated/server";
 import { authComponent } from "./auth";
-
-const USERNAME_PATTERN = /^[a-z0-9_.]{3,20}$/;
+import { requireFullAccount } from "./access";
+import { USERNAME_PATTERN } from "@/lib/username-pattern";
 
 type DocWithId = { _id?: string; id?: string };
 
@@ -17,6 +17,7 @@ export const changeUsername = mutation({
 	args: { username: v.string() },
 	handler: async (ctx, { username }) => {
 		const user = await authComponent.getAuthUser(ctx);
+		await requireFullAccount(ctx);
 		const userId = String(user._id);
 		const normalized = username.trim().toLowerCase();
 
