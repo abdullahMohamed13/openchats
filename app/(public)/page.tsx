@@ -1,10 +1,10 @@
-import Navbar from "@/components/sections/Navbar";
-import HeroSection from "@/components/sections/Hero";
-import HowItWorks from "@/components/sections/HowItWorks";
-import Features from "@/components/sections/CoreFeatures";
-import UseCases from "@/components/sections/UseCases";
-import FAQSection from "@/components/sections/FAQ";
-import CTABannerSection from "@/components/sections/CTABanner";
+import Navbar from "@/components/guest/reusable/Navbar";
+import HeroSection from "@/components/guest/Hero";
+import HowItWorks from "@/components/guest/HowItWorks";
+import Features from "@/components/guest/CoreFeatures";
+import UseCases from "@/components/guest/UseCases";
+import FAQSection from "@/components/guest/FAQ";
+import CTABannerSection from "@/components/guest/CTABanner";
 
 export default function Home() {
 	return <div className="h-full">

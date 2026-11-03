@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     unoptimized: true,
-    remotePatterns: [{ protocol: "https", hostname: "*.googleusercontent.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "*.convex.cloud" },
+    ],
   },
 };
 

@@ -13,10 +13,16 @@ import type * as auth from "../auth.js";
 import type * as auth_queries from "../auth_queries.js";
 import type * as channels from "../channels.js";
 import type * as email from "../email.js";
+import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as invites from "../invites.js";
+import type * as profile from "../profile.js";
 import type * as stream from "../stream.js";
 import type * as username from "../username.js";
+import type * as utils_normalizeWorkspaceName from "../utils/normalizeWorkspaceName.js";
+import type * as utils_slugifyName from "../utils/slugifyName.js";
+import type * as utils_workspaceNameKey from "../utils/workspaceNameKey.js";
+import type * as workspaceMembers from "../workspaceMembers.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -31,10 +37,16 @@ declare const fullApi: ApiFromModules<{
   auth_queries: typeof auth_queries;
   channels: typeof channels;
   email: typeof email;
+  guest: typeof guest;
   http: typeof http;
   invites: typeof invites;
+  profile: typeof profile;
   stream: typeof stream;
   username: typeof username;
+  "utils/normalizeWorkspaceName": typeof utils_normalizeWorkspaceName;
+  "utils/slugifyName": typeof utils_slugifyName;
+  "utils/workspaceNameKey": typeof utils_workspaceNameKey;
+  workspaceMembers: typeof workspaceMembers;
   workspaces: typeof workspaces;
 }>;
 
