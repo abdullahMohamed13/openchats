@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Logout, Grid2x22, Flag, Close, Menu } from "pixelarticons/react";
+import { User, Logout, Grid2x22, Flag, Close, Menu, UserPlus } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
 import { handleSignOut } from "@/lib/sign-out";
 import { BrutalButton } from "@/components/ui/brutal-button";
@@ -28,7 +28,8 @@ export default function Navbar() {
 	const { scrollTo } = useSmoothScroll();
 
 	const user = session?.user;
-	const needsOnboarding = !isPending && !!user && user.onboarded !== true;
+	const isGuest = !!user?.isAnonymous;
+	const needsOnboarding = !isPending && !!user && user.onboarded !== true && !isGuest;
 	const showAvatar = !!user?.image && !avatarBroken;
 
 	useEffect(() => {
@@ -142,6 +143,18 @@ export default function Navbar() {
 										</Link>
 									)}
 
+									{isGuest && (
+										<Link
+											href="/signup"
+											role="menuitem"
+											onClick={() => setUserOpen(false)}
+											className="retro flex items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-muted"
+										>
+											<UserPlus width={16} height={16} aria-hidden />
+											Create an account
+										</Link>
+									)}
+									
 									<button
 										type="button"
 										role="menuitem"
