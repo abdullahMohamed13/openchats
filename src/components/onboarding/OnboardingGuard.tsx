@@ -13,8 +13,10 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 		if (!session) {
 			router.replace("/signin");
 		} else if (session.user.onboarded) {
+			// Fully onboarded users go to chat
 			router.replace("/chat");
 		}
+		// Guests (isAnonymous) stay on /onboarding to run setupGuest mutation
 	}, [session, isPending, router]);
 
 	if (isPending) return null;
