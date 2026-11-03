@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, User, Loading, Home } from "pixelarticons/react";
 import { handleSignIn } from "@/lib/sign-in";
+import { handleGuestSignIn } from "@/lib/guest";
 import { handleUsernameSignIn } from "@/lib/sign-in.username";
 import type { SocialProvider } from "@/types/social";
 import { handleSignup } from "@/lib/sign-up";
@@ -51,11 +52,12 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
   const isSignUp = initialMode === "sign-up";
   const resolvedCallbackURL = callbackURL ?? "/chat";
   const [loading, setLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
   const [socialProvider, setSocialProvider] = useState<SocialProvider | null>(null);
   const [signInMode, setSignInMode] = useState<"email" | "username">("email");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const busy = loading || socialProvider !== null;
+  const busy = loading || guestLoading || socialProvider !== null;
 
   const startSocialLogin = (provider: SocialProvider) => {
     if (busy) return;
@@ -222,9 +224,10 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               <button
                 type="button"
                 className="guest-btn"
-                onClick={() => router.push("/")}
+                disabled={busy}
+                onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
               >
-                Enter as a guest
+                {guestLoading ? "Starting…" : "Enter as a guest"}
               </button>
               <p className="social-text">Or sign in with social platforms</p>
               <div className="social-media">
@@ -290,9 +293,10 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               <button
                 type="button"
                 className="guest-btn"
-                onClick={() => router.push("/")}
+                disabled={busy}
+                onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
               >
-                Enter as a guest
+                {guestLoading ? "Starting…" : "Enter as a guest"}
               </button>
               <p className="social-text">Or sign up with social platforms</p>
               <div className="social-media">

@@ -16,10 +16,14 @@ export default defineSchema({
 		slug: v.string(),
 		ownerId: v.string(),
 		imageId: v.optional(v.id("_storage")),
+		kind: v.optional(
+			v.union(v.literal("guest-shared"), v.literal("guest-private")),
+		),
 		createdAt: v.number(),
 	})
 		.index("slug", ["slug"])
-		.index("ownerId", ["ownerId"]),
+		.index("ownerId", ["ownerId"])
+		.index("kind", ["kind"]),
 	workspaceMembers: defineTable({
 		workspaceId: v.id("workspaces"),
 		userId: v.string(),
@@ -49,6 +53,7 @@ export default defineSchema({
 		streamId: v.string(),
 		name: v.string(),
 		createdBy: v.string(),
+		welcomeSentAt: v.optional(v.number()),
 		createdAt: v.number(),
 	})
 		.index("workspaceId", ["workspaceId"])
