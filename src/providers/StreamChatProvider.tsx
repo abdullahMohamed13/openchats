@@ -46,9 +46,11 @@ export default function StreamChatProvider({ children }: {children: ReactNode })
 
 		const connect = async () => {
 			if (!userId) {
-				// The session ended while the provider was still mounted.
-				if (instance.userID) await instance.disconnectUser().catch(() => {});
+				// The session ended while the provider was still mounted. Unmount the
+				// chat UI first, then disconnect; disconnecting while channels are
+				// still rendered causes "channel after client.disconnect()" errors.
 				if (active) setClient(null);
+				if (instance.userID) await instance.disconnectUser().catch(() => {});
 				return;
 			}
 
@@ -62,7 +64,9 @@ export default function StreamChatProvider({ children }: {children: ReactNode })
 
 			// A previous account may still own the singleton after a sign-out or
 			// an account switch. connectUser() throws unless it is disconnected.
+			// Unmount the old chat UI before tearing the client down.
 			if (instance.userID) {
+				if (active) setClient(null);
 				await instance.disconnectUser().catch(() => {});
 			}
 

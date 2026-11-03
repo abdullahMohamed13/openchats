@@ -1,35 +1,16 @@
 import { authClient } from "./auth-client";
 import type { useRouter } from "next/navigation";
 
-async function disconnectStream(): Promise<void> {
-  const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
-  if (!apiKey) return;
-
-  try {
-    // Loaded lazily so public pages do not pull in the Stream Chat bundle.
-    const { StreamChat } = await import("stream-chat");
-    const client = StreamChat.getInstance(apiKey);
-    if (client.userID) {
-      // Suppress "channel after disconnect" errors during cleanup
-      await client.disconnectUser().catch((err) => {
-        if (err instanceof Error && !err.message.includes("can't use a channel after client.disconnect")) {
-          console.warn("Stream disconnect error:", err);
-        }
-      });
-    }
-  } catch {
-    // A failed chat disconnect must never block signing out.
-  }
-}
-
 export const handleSignOut = async (router: ReturnType<typeof useRouter>) => {
-  // Disconnect Stream first to avoid "channel after disconnect" errors
-  // when React components unmount during the sign-out transition.
-  await disconnectStream();
+  // Let StreamChatProvider disconnect after the chat UI has unmounted. Calling
+  // client.disconnectUser() here tears the client down while channels are still
+  // mounted, which makes Stream throw "can't use a channel after
+  // client.disconnect() was called" during the sign-out transition.
   await authClient.signOut({
     fetchOptions: {
       onSuccess: () => {
-        router.push("/signin");
+        router.replace("/signin");
+        router.refresh();
       },
     },
   });
