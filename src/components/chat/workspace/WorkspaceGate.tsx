@@ -8,12 +8,16 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/8bit/button";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 import Image from "next/image";
+import { authClient } from "@/lib/auth-client";
+import { Spinner } from "@/components/ui/8bit/spinner";
 
 export function WorkspaceGate() {
 	const router = useRouter();
 	const workspaces = useQuery(api.workspaces.listMyWorkspaces);
+	const { data: session } = authClient.useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
+	const isGuest = session?.user?.isAnonymous;
 	const firstWorkspace = workspaces?.[0];
 
 	useEffect(() => {
@@ -24,8 +28,9 @@ export function WorkspaceGate() {
 
 	if (workspaces === undefined) {
 		return (
-			<main className="flex min-h-screen w-full items-center justify-center bg-background text-sm text-muted-foreground">
+			<main className="flex min-h-screen flex-col gap-2 w-full items-center justify-center bg-background text-sm text-muted-foreground">
 				Loading workspaces…
+				<Spinner variant="diamond" />
 			</main>
 		);
 	}
@@ -33,9 +38,22 @@ export function WorkspaceGate() {
 	if (firstWorkspace) {
 		return (
 			<main className="flex min-h-screen w-full items-center justify-center bg-background text-sm text-muted-foreground">
-				Opening {firstWorkspace.name}…
+				Opening {firstWorkspace.name} 
 			</main>
 		);
+	}
+
+	if (isGuest) {
+		// For guests, if workspaces is empty (not just undefined), show setup message
+		if (workspaces.length === 0) {
+			return (
+				<main className="flex min-h-screen flex-col gap-2 w-full items-center justify-center bg-background text-sm text-muted-foreground">
+					Setting up your guest spaces
+					<Spinner variant="diamond" />
+				</main>
+			);
+		}
+		// Guest workspaces loaded; fall through to normal rendering
 	}
 
 	return (

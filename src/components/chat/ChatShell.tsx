@@ -34,6 +34,7 @@ interface ChatShellProps {
 export function ChatShell({ workspaceId }: ChatShellProps) {
 	const router = useRouter();
 	const { data: session, isPending } = authClient.useSession();
+	const isGuest = !!session?.user?.isAnonymous;
 	const workspaces = useQuery(
 		api.workspaces.listMyWorkspaces,
 		session && !isPending ? undefined : "skip",
@@ -106,6 +107,8 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 
 	if (!activeWorkspace) return null;
 
+	const canManageWorkspace = activeWorkspace.role !== "member" && !isGuest;
+
 	const activeId = selectedId || channels[0]?.id || dms[0]?.id || "";
 
 	const activeChannel = channels.find((channel) => channel.id === activeId);
@@ -113,7 +116,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const activeChannelRow = activeChannel
 		? dbChannels?.find((channel) => channel.streamId === activeChannel.id)
 		: undefined;
-	const canManageChannels = activeWorkspace.role !== "member";
+	const canManageChannels = activeWorkspace.role !== "member" && !isGuest;
 	const notificationCount =
 		channels.reduce((total, channel) => total + channel.unreadCount, 0) +
 		dms.reduce((total, dm) => total + dm.unreadCount, 0);
@@ -185,9 +188,10 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				currentUser={currentUser}
 				workspaces={workspaces}
 				activeWorkspaceId={workspaceId}
-				onCreateWorkspace={() => setCreateWorkspaceOpen(true)}
-				onOpenSettings={() => setSettingsOpen(true)}
-				onEditProfile={() => setProfileOpen(true)}
+				onCreateWorkspace={isGuest ? undefined : () => setCreateWorkspaceOpen(true)}
+				onOpenSettings={isGuest ? undefined : () => setSettingsOpen(true)}
+				onEditProfile={isGuest ? undefined : () => setProfileOpen(true)}
+				isGuest={isGuest}
 			/>
 
 			<NavSidebar
@@ -195,21 +199,22 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				workspaceImageUrl={activeWorkspace.imageUrl}
 				workspaces={workspaces}
 				activeWorkspaceId={workspaceId}
-				canManageWorkspace={activeWorkspace.role !== "member"}
+				canManageWorkspace={canManageWorkspace}
 				currentUserBadge={currentUser.badge}
 				channels={channels}
 				dms={dms}
 				activeConversationId={activeId}
 				onSelectConversation={handleSelect}
 				onSelectWorkspace={handleSelectWorkspace}
-				onCreateWorkspace={() => setCreateWorkspaceOpen(true)}
-				onCreateChannel={() => setCreateChannelOpen(true)}
-				onStartDirectMessage={() => setNewDmOpen(true)}
-				onOpenInvite={() => setInviteOpen(true)}
-				onOpenSettings={() => setSettingsOpen(true)}
+				onCreateWorkspace={isGuest ? undefined : () => setCreateWorkspaceOpen(true)}
+				onCreateChannel={isGuest ? undefined : () => setCreateChannelOpen(true)}
+				onStartDirectMessage={isGuest ? undefined : () => setNewDmOpen(true)}
+				onOpenInvite={isGuest ? undefined : () => setInviteOpen(true)}
+				onOpenSettings={isGuest ? undefined : () => setSettingsOpen(true)}
 				open={navOpen}
 				collapsed={navCollapsed}
 				onClose={() => setNavOpen(false)}
+				isGuest={isGuest}
 			/>
 
 			{loading && !resolved ? (
@@ -234,12 +239,12 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				emptyState
 			)}
 
-			{createWorkspaceOpen && (
+			{!isGuest && createWorkspaceOpen && (
 				<CreateWorkspaceDialog
 					onClose={() => setCreateWorkspaceOpen(false)}
 				/>
 			)}
-			{createChannelOpen && (
+			{!isGuest && createChannelOpen && (
 				<CreateChannelDialog
 					workspaceId={workspaceId}
 					onClose={() => setCreateChannelOpen(false)}
@@ -249,14 +254,14 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					}}
 				/>
 			)}
-			{newDmOpen && (
+			{!isGuest && newDmOpen && (
 				<NewDirectMessageDialog
 					workspaceId={workspaceId}
 					onClose={() => setNewDmOpen(false)}
 					onCreated={handleDirectMessageCreated}
 				/>
 			)}
-			{notificationsOpen && (
+			{!isGuest && notificationsOpen && (
 				<NotificationsDialog
 					channels={channels}
 					dms={dms}
@@ -265,13 +270,13 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					onClose={() => setNotificationsOpen(false)}
 				/>
 			)}
-			{inviteOpen && (
+			{!isGuest && inviteOpen && (
 				<InviteDialog
 					workspaceId={workspaceId}
 					onClose={() => setInviteOpen(false)}
 				/>
 			)}
-			{settingsOpen && (
+			{!isGuest && settingsOpen && (
 				<WorkspaceSettingsDialog
 					workspaceId={workspaceId}
 					workspaceName={activeWorkspace.name}
@@ -284,10 +289,10 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					}}
 				/>
 			)}
-			{profileOpen && (
+			{!isGuest && profileOpen && (
 				<EditProfileDialog onClose={() => setProfileOpen(false)} />
 			)}
-			{channelSettingsOpen && activeChannel && activeChannelRow && (
+			{!isGuest && channelSettingsOpen && activeChannel && activeChannelRow && (
 				<ChannelSettingsDialog
 					channelId={activeChannelRow._id}
 					channelName={activeChannel.name}

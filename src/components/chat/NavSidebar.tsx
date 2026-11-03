@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
 	Check,
 	ChevronDown,
@@ -26,7 +25,6 @@ export function NavSidebar({
 	workspaces,
 	activeWorkspaceId,
 	canManageWorkspace,
-	currentUserBadge,
 	channels,
 	dms,
 	activeConversationId,
@@ -40,11 +38,11 @@ export function NavSidebar({
 	open,
 	collapsed,
 	onClose,
-}: NavSidebarProps) {
+	isGuest = false,
+}: NavSidebarProps & { isGuest?: boolean }) {
 	const [channelsOpen, setChannelsOpen] = useState(true);
 	const [dmsOpen, setDmsOpen] = useState(true);
 	const [query, setQuery] = useState("");
-	const [badgeBroken, setBadgeBroken] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	const normalized = query.trim().toLowerCase();
@@ -95,7 +93,7 @@ export function NavSidebar({
 								/>
 								<div
 									role="menu"
-									className="absolute left-0 top-full z-50 mt-2 flex w-60 flex-col border-2 border-foreground bg-background shadow-[4px_4px_0px_var(--foreground)]"
+									className="absolute left-0 top-full z-50 mt-2 flex w-max min-w-56 max-w-[calc(100vw-2rem)] flex-col border-2 border-foreground bg-background shadow-[4px_4px_0px_var(--foreground)]"
 								>
 									<p className="border-b border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
 										Workspaces
@@ -118,40 +116,44 @@ export function NavSidebar({
 													className="size-5 shrink-0 rounded border border-border"
 													initialsClassName="text-[7px]"
 												/>
-												<span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+												<span className="flex-1 whitespace-nowrap">{workspace.name}</span>
 												{workspace._id === activeWorkspaceId && (
 													<Check width={14} height={14} className="shrink-0 text-primary" aria-hidden />
 												)}
 											</button>
 										))}
 									</div>
-									<div className="border-t border-border p-1">
-										{canManageWorkspace && (
+									<div className={`${!isGuest && "border-t border-border p-1"}`}>
+										{canManageWorkspace && !isGuest && onOpenInvite && (
 											<MenuAction
 												icon={<UserPlus width={14} height={14} />}
 												label="Invite people"
 												onClick={() => {
 													setMenuOpen(false);
-													onOpenInvite();
+													onOpenInvite?.();
 												}}
 											/>
 										)}
-										<MenuAction
-											icon={<Settings2 width={14} height={14} />}
-											label="Workspace settings"
-											onClick={() => {
-												setMenuOpen(false);
-												onOpenSettings();
-											}}
-										/>
-										<MenuAction
-											icon={<Plus width={14} height={14} />}
-											label="New workspace"
-											onClick={() => {
-												setMenuOpen(false);
-												onCreateWorkspace();
-											}}
-										/>
+										{!isGuest && onOpenSettings && (
+											<MenuAction
+												icon={<Settings2 width={14} height={14} />}
+												label="Workspace settings"
+												onClick={() => {
+													setMenuOpen(false);
+													onOpenSettings?.();
+												}}
+											/>
+										)}
+										{!isGuest && onCreateWorkspace && (
+											<MenuAction
+												icon={<Plus width={14} height={14} />}
+												label="New workspace"
+												onClick={() => {
+													setMenuOpen(false);
+													onCreateWorkspace?.();
+												}}
+											/>
+										)}
 									</div>
 								</div>
 							</>
@@ -192,16 +194,18 @@ export function NavSidebar({
 						open={channelsOpen}
 						onToggle={() => setChannelsOpen((open) => !open)}
 						action={
-							<Button
-								type="button"
-								aria-label="Create channel"
-								onClick={onCreateChannel}
-								variant="ghost"
-								size="sm"
-								className="size-5 p-0 text-muted-foreground"
-							>
-								+
-							</Button>
+							!isGuest && onCreateChannel && (
+								<Button
+									type="button"
+									aria-label="Create channel"
+									onClick={onCreateChannel}
+									variant="ghost"
+									size="sm"
+									className="size-5 p-0 text-muted-foreground"
+								>
+									+
+								</Button>
+							)
 						}
 					/>
 					{channelsOpen &&
@@ -223,36 +227,29 @@ export function NavSidebar({
 							</p>
 						))}
 
-					<SectionHeader
-						label="Direct messages"
-						open={dmsOpen}
-						onToggle={() => setDmsOpen((open) => !open)}
-						action={
-							<Button
-								type="button"
-								aria-label="Start a new direct message"
-								title="Start a new direct message"
-								onClick={onStartDirectMessage}
-								variant="ghost"
-								size="sm"
-								className="size-5 p-0 text-muted-foreground"
-							>
-								{badgeBroken ? (
-									<Plus width={12} height={12} aria-hidden />
-								) : (
-									<Image
-										src={currentUserBadge ?? "/images/badges/knight-shield.webp"}
-										alt=""
-										width={12}
-										height={12}
-										onError={() => setBadgeBroken(true)}
-										className="pixelated"
-									/>
-								)}
-							</Button>
-						}
-					/>
-					{dmsOpen &&
+					{!isGuest && (
+						<SectionHeader
+							label="Direct messages"
+							open={dmsOpen}
+							onToggle={() => setDmsOpen((open) => !open)}
+							action={
+								onStartDirectMessage && (
+									<Button
+										type="button"
+										aria-label="Start a new direct message"
+										title="Start a new direct message"
+										onClick={onStartDirectMessage}
+										variant="ghost"
+										size="sm"
+										className="size-5 p-0 text-muted-foreground"
+									>
+										+
+									</Button>
+								)
+							}
+						/>
+					)}
+					{!isGuest && dmsOpen &&
 						(filteredDms.length > 0 ? (
 							<div className="flex flex-col gap-0.5 px-1">
 								{filteredDms.map((dm) => (

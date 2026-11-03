@@ -47,6 +47,7 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 	};
 
 	const callback = encodeURIComponent(`/invite/${token}`);
+	const isGuest = !!session?.user?.isAnonymous;
 	const signedInEmail = session?.user?.email?.toLowerCase() ?? "";
 	const emailMismatch =
 		invite?.status === "valid" &&
@@ -108,6 +109,29 @@ export function InviteAccept({ token }: InviteAcceptProps) {
 					Use the email address the invite was sent to, if it was an email
 					invite.
 				</p>
+			</>
+		);
+	} else if (isGuest) {
+		body = (
+			<>
+				<p className="mt-3 text-sm text-muted-foreground">
+					{invite.inviterName} invited you to join{" "}
+					<span className="font-semibold text-foreground">
+						{invite.workspaceName}
+					</span>
+					.
+				</p>
+				<p className="mt-3 text-xs text-muted-foreground">
+					Guest accounts cannot accept workspace invites. Create an account to
+					join and keep your private guest messages.
+				</p>
+				<Link
+					href="/signup"
+					onClick={rememberInvite}
+					className="mt-6 inline-flex w-full items-center justify-center border-2 border-foreground bg-primary px-4 py-3 text-xs font-bold uppercase text-primary-foreground shadow-[4px_4px_0px_var(--foreground)] transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5"
+				>
+					Create an account
+				</Link>
 			</>
 		);
 	} else {

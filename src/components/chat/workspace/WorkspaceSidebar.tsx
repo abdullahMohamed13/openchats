@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Flag, Settings2, MoreVertical, Plus } from "pixelarticons/react";
+import { Flag, Settings2, MoreVertical, Plus, UserPlus } from "pixelarticons/react";
 import { Button } from "@/components/ui/8bit/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -15,9 +16,10 @@ interface WorkspaceSidebarProps {
 	currentUser: CurrentUser;
 	workspaces: WorkspaceSummary[];
 	activeWorkspaceId: string;
-	onCreateWorkspace: () => void;
-	onOpenSettings: () => void;
-	onEditProfile: () => void;
+	onCreateWorkspace?: () => void;
+	onOpenSettings?: () => void;
+	onEditProfile?: () => void;
+	isGuest?: boolean;
 }
 
 export function WorkspaceSidebar({
@@ -27,6 +29,7 @@ export function WorkspaceSidebar({
 	onCreateWorkspace,
 	onOpenSettings,
 	onEditProfile,
+	isGuest = false,
 }: WorkspaceSidebarProps) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const { data: session, isPending } = authClient.useSession();
@@ -37,13 +40,15 @@ export function WorkspaceSidebar({
 	return (
 		<aside className="hidden w-16 shrink-0 flex-col items-center gap-3 border-r border-border bg-muted py-4 lg:flex">
 
-			<Image
-				src="/logo.webp"
-				className="rounded-lg border-2 border-foreground bg-primary font-press-start text-[10px] text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
-				alt="Openchats logo"
-				height={36}
-				width={36}
-			/>
+			<Link href="/" title="Go Home" aria-label="Go Home Button">
+				<Image
+					src="/logo.webp"
+					className="rounded-lg border-2 border-foreground bg-primary font-press-start text-[10px] text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
+					alt="Openchats logo"
+					height={36}
+					width={36}
+				/>
+			</Link>
 
 			<div className="h-px w-8 bg-border" aria-hidden />
 
@@ -63,7 +68,7 @@ export function WorkspaceSidebar({
 								"flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 font-press-start text-[10px] uppercase transition-all",
 								active
 									? "border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0px_var(--foreground)]"
-									: "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
+									: "border text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
 							)}
 						>
 							<WorkspaceAvatar
@@ -75,21 +80,23 @@ export function WorkspaceSidebar({
 					);
 				})}
 
-				<Button
-					type="button"
-					onClick={onCreateWorkspace}
-					aria-label="Create workspace"
-					title="Create workspace"
-					variant="ghost"
-					size="sm"
-					className="size-10 shrink-0 rounded-lg border border-dashed border-border p-0 text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
-				>
-					<Plus width={18} height={18} />
-				</Button>
+				{!isGuest && onCreateWorkspace && (
+					<Button
+						type="button"
+						onClick={onCreateWorkspace}
+						aria-label="Create workspace"
+						title="Create workspace"
+						variant="ghost"
+						size="sm"
+						className="size-10 shrink-0 rounded-lg border border-dashed border-border p-0 text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
+					>
+						<Plus width={18} height={18} />
+					</Button>
+				)}
 			</div>
 
 			<div className="relative mt-auto flex flex-col items-center gap-3">
-				{needsOnboarding && (
+				{needsOnboarding && !isGuest && (
 					<Button
 						type="button"
 						onClick={() => router.push("/onboarding")}
@@ -107,17 +114,19 @@ export function WorkspaceSidebar({
 					</Button>
 				)}
 
-				<Button
-					type="button"
-					onClick={onOpenSettings}
-					aria-label="Workspace settings"
-					title="Workspace settings"
-					variant="ghost"
-					size="sm"
-					className="size-9 rounded-lg p-0 text-muted-foreground hover:bg-background hover:text-foreground"
-				>
-					<Settings2 width={18} height={18} />
-				</Button>
+				{!isGuest && onOpenSettings && (
+					<Button
+						type="button"
+						onClick={onOpenSettings}
+						aria-label="Workspace settings"
+						title="Workspace settings"
+						variant="ghost"
+						size="sm"
+						className="size-9 rounded-lg p-0 text-muted-foreground hover:bg-background hover:text-foreground"
+					>
+						<Settings2 width={18} height={18} />
+					</Button>
+				)}
 
 				<div className="relative">
 					<button
@@ -149,40 +158,53 @@ export function WorkspaceSidebar({
 								className="fixed inset-0 z-40 cursor-default"
 								onClick={() => setMenuOpen(false)}
 							/>
-							<div className="absolute bottom-12 left-10 z-50 flex w-44 flex-col overflow-hidden rounded-lg border border-border bg-background shadow-[4px_4px_0px_rgba(0,0,0,0.4)]">
+							<div className="absolute bottom-12 left-10 z-50 flex flex-col rounded-lg border border-border bg-background shadow-[4px_4px_0px_rgba(0,0,0,0.4)]">
 								<div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
 									<Image
 										src={currentUser.avatar}
-										alt=""
+										alt="User Avatar"
 										width={28}
 										height={28}
 										className="size-7 rounded-full object-cover"
 									/>
 									<div className="min-w-0">
-										<p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
-										<p className="truncate text-xs text-muted-foreground">{currentUser.title}</p>
+										<p className="text-sm font-medium text-foreground">{currentUser.name}</p>
+										<p className="text-xs text-muted-foreground">{currentUser.title}</p>
 									</div>
 								</div>
 								<div className="flex flex-col p-1">
-									<button
-										type="button"
-										onClick={() => {
-											setMenuOpen(false);
-											onEditProfile();
-										}}
-										className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-									>
-										<MoreVertical width={16} height={16} aria-hidden />
-										Edit profile
-									</button>
-									<SignOutButton className="w-full justify-start gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" />
+									{!isGuest && onEditProfile && (
+										<button
+											type="button"
+											onClick={() => {
+												setMenuOpen(false);
+												onEditProfile();
+											}}
+											className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+										>
+											<MoreVertical width={16} height={16} aria-hidden />
+											Edit profile
+										</button>
+									)}
+									{isGuest && (
+										<Link
+											href="/signup"
+											onClick={() => setMenuOpen(false)}
+											className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+										>
+											<UserPlus width={16} height={16} aria-hidden />
+											Create an account
+										</Link>
+									)}
+									<SignOutButton
+										className="w-full justify-start gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+									/>
 								</div>
 							</div>
 						</>
 					)}
 				</div>
 			</div>
-
 		</aside>
 	);
 }

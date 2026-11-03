@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, User, Loading, Home } from "pixelarticons/react";
+import { Lock, Mail, User, Loading, Home, Grid2x22 } from "pixelarticons/react";
 import { handleSignIn } from "@/lib/sign-in";
 import { handleGuestSignIn } from "@/lib/guest";
 import { handleUsernameSignIn } from "@/lib/sign-in.username";
 import type { SocialProvider } from "@/types/social";
 import { handleSignup } from "@/lib/sign-up";
 import { handleSocialLogin } from "@/lib/social";
+import { authClient } from "@/lib/auth-client";
 import {
   PASSWORD_MIN_LENGTH,
   validateAuthField,
@@ -49,8 +50,11 @@ const SIGN_IN_USERNAME_SPECS: AuthFieldSpec[] = [
 
 export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: AuthSwitchProps = {}) {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
   const isSignUp = initialMode === "sign-up";
+  const isGuest = !!session?.user?.isAnonymous;
   const resolvedCallbackURL = callbackURL ?? "/chat";
+  const socialCallbackURL = isGuest ? "/onboarding" : resolvedCallbackURL;
   const [loading, setLoading] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
   const [socialProvider, setSocialProvider] = useState<SocialProvider | null>(null);
@@ -64,7 +68,7 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
     setSocialProvider(provider);
     handleSocialLogin({
       provider,
-      callbackURL: resolvedCallbackURL,
+      callbackURL: socialCallbackURL,
       setLoading: (value) => {
         setLoading(value);
         if (!value) setSocialProvider(null);
@@ -150,10 +154,16 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
 
   return (
     <div className="auth-switch">
-      <Link href="/" className="auth-home-link">
-        <Home width={16} height={16} aria-hidden />
-        Home
-      </Link>
+      <div className="flex self-start gap-2">
+        <Link href="/" className="auth-home-link">
+          <Home width={16} height={16} aria-hidden />
+          Home
+        </Link>
+        <Link href="/chat" className="auth-home-link">
+          <Grid2x22 width={16} height={16} aria-hidden />
+          Back to chat
+        </Link>
+      </div>
       <div className={`container ${isSignUp ? "sign-up-mode" : ""}`}>
         <div className="forms-container">
           <div className="signin-signup">
@@ -221,14 +231,16 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               <button type="submit" className="btn btn-primary" disabled={busy}>
                 {loading ? <Loading width={18} height={18} className="animate-spin" /> : "Sign in"}
               </button>
-              <button
-                type="button"
-                className="guest-btn"
-                disabled={busy}
-                onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
-              >
-                {guestLoading ? "Starting…" : "Enter as a guest"}
-              </button>
+              {!isGuest && (
+                <button
+                  type="button"
+                  className="guest-btn"
+                  disabled={busy}
+                  onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
+                >
+                  {guestLoading ? "Starting…" : "Enter as a guest"}
+                </button>
+              )}
               <p className="social-text">Or sign in with social platforms</p>
               <div className="social-media">
                 <SocialIcons
@@ -241,6 +253,11 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
 
             <form className="sign-up-form" onSubmit={handleSubmit} noValidate>
               <h2 className="title">Sign up</h2>
+              {isGuest && (
+                <p className="social-text">
+                  Create an account to keep your private guest messages.
+                </p>
+              )}
               <div className="input-row">
                 <Field
                   id="auth-signup-firstname"
@@ -290,14 +307,16 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               <button type="submit" className="btn btn-primary" disabled={busy}>
                 {loading ? <Loading width={18} height={18} className="animate-spin" /> : "Create Account"}
               </button>
-              <button
-                type="button"
-                className="guest-btn"
-                disabled={busy}
-                onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
-              >
-                {guestLoading ? "Starting…" : "Enter as a guest"}
-              </button>
+              {!isGuest && (
+                <button
+                  type="button"
+                  className="guest-btn"
+                  disabled={busy}
+                  onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
+                >
+                  {guestLoading ? "Starting…" : "Enter as a guest"}
+                </button>
+              )}
               <p className="social-text">Or sign up with social platforms</p>
               <div className="social-media">
                 <SocialIcons
@@ -320,14 +339,16 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
             </div>
           </div>
 
-          <div className="panel right-panel">
-            <div className="content">
-              <h3>One of us?</h3>
-              <button className="btn btn-outline" onClick={() => router.push("/signin")}>
-              	Sign in
-              </button>
+          {!isGuest && (
+            <div className="panel right-panel">
+              <div className="content">
+                <h3>One of us?</h3>
+                <button className="btn btn-outline" onClick={() => router.push("/signin")}>
+                	Sign in
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
