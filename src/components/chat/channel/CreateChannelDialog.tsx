@@ -15,6 +15,17 @@ interface CreateChannelDialogProps {
 	onCreated: (channelId: string) => void;
 }
 
+const randomTeams = [
+	"Delulu Department",
+	"Certified Yappers",
+	"Chronically Online",
+	"Touch Grass Inc.",
+  "The Chaos Committee",
+  "Mentally AFK",
+	"Unpaid Interns",
+  "Uncles"
+]
+
 export function CreateChannelDialog({
 	workspaceId,
 	onClose,
@@ -56,6 +67,10 @@ export function CreateChannelDialog({
 		}
 	};
 
+	const [placeholder] = useState(
+  	() => randomTeams[Math.floor(Math.random() * randomTeams.length)]
+	);
+	
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center px-4">
 			<button
@@ -95,7 +110,7 @@ export function CreateChannelDialog({
 						name="name"
 						value={name}
 						onChange={(event) => setName(event.target.value)}
-						placeholder="design-team"
+						placeholder={placeholder}
 						autoComplete="off"
 						autoFocus
 						maxLength={40}
