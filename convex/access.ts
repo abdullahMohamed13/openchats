@@ -18,6 +18,19 @@ export async function getAuthUserId(ctx: AuthCtx): Promise<string> {
 	return String(user._id);
 }
 
+/**
+ * Guests can read and chat in their guest workspaces, but account-level actions
+ * (creating workspaces/channels, invites, profile changes, etc.) require a
+ * permanent account.
+ */
+export async function requireFullAccount(ctx: AuthCtx) {
+	const user = await authComponent.getAuthUser(ctx);
+	if (user.isAnonymous) {
+		throw new Error("Create an account to use this feature");
+	}
+	return user;
+}
+
 export async function getMembership(
 	ctx: DbCtx,
 	workspaceId: Id<"workspaces">,
