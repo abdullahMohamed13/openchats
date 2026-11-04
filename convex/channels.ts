@@ -9,7 +9,12 @@ import {
 	query,
 	type ActionCtx,
 } from "./_generated/server";
-import { getAuthUserId, requireFullAccount, requireMembership, requireMembershipForAction } from "./access";
+import {
+	requireAdminForAction,
+	requireFullAccount,
+	requireMembership,
+	requireMembershipForAction,
+} from "./access";
 import { authComponent } from "./auth";
 import {
 	addUserToChannel,
@@ -48,8 +53,12 @@ export const getChannelRow = internalQuery({
 export const listWorkspaceChannels = query({
 	args: { workspaceId: v.id("workspaces") },
 	handler: async (ctx, { workspaceId }) => {
-		const userId = await getAuthUserId(ctx);
-		await requireMembership(ctx, workspaceId, userId);
+		// Signing out revokes the session while this query is still subscribed;
+		// return an empty list instead of throwing during that transition.
+		const user = await authComponent.safeGetAuthUser(ctx);
+		if (!user) return [];
+
+		await requireMembership(ctx, workspaceId, String(user._id));
 
 		const rows = await ctx.db
 			.query("channels")
@@ -216,7 +225,7 @@ export const createChannel = action({
 		const user = await authComponent.getAuthUser(ctx);
 		await requireFullAccount(ctx);
 		const userId = String(user._id);
-		await requireMembershipForAction(ctx, workspaceId, userId);
+		await requireAdminForAction(ctx, workspaceId, userId);
 
 		const trimmed = normalizeChannelName(name);
 
