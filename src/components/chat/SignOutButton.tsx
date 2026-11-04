@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Logout } from "pixelarticons/react";
 import { cn } from "@/lib/utils";
 import { handleSignOut } from "@/lib/sign-out";
@@ -11,12 +10,10 @@ interface SignOutButtonProps {
 }
 
 export function SignOutButton({ className, children }: SignOutButtonProps) {
-  const router = useRouter();
-
   return (
     <button
       type="button"
-      onClick={() => handleSignOut(router)}
+      onClick={() => handleSignOut()}
       aria-label="Sign out"
       className={cn("flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground", className)}
     >

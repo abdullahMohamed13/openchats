@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Flag, Settings2, MoreVertical, Plus, UserPlus } from "pixelarticons/react";
+import { Flag, Mail, Settings2, MoreVertical, Plus, UserPlus } from "pixelarticons/react";
 import { Button } from "@/components/ui/8bit/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,8 @@ interface WorkspaceSidebarProps {
 	onCreateWorkspace?: () => void;
 	onOpenSettings?: () => void;
 	onEditProfile?: () => void;
+	onOpenInvitations?: () => void;
+	invitationCount?: number;
 	isGuest?: boolean;
 }
 
@@ -29,6 +31,8 @@ export function WorkspaceSidebar({
 	onCreateWorkspace,
 	onOpenSettings,
 	onEditProfile,
+	onOpenInvitations,
+	invitationCount = 0,
 	isGuest = false,
 }: WorkspaceSidebarProps) {
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -158,21 +162,39 @@ export function WorkspaceSidebar({
 								className="fixed inset-0 z-40 cursor-default"
 								onClick={() => setMenuOpen(false)}
 							/>
-							<div className="absolute bottom-12 left-10 z-50 flex flex-col rounded-lg border border-border bg-background shadow-[4px_4px_0px_rgba(0,0,0,0.4)]">
+							<div className="absolute bottom-12 left-10 z-50 flex w-max max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-border bg-background shadow-[4px_4px_0px_rgba(0,0,0,0.4)]">
 								<div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
 									<Image
 										src={currentUser.avatar}
 										alt="User Avatar"
 										width={28}
 										height={28}
-										className="size-7 rounded-full object-cover"
+										className="size-7 shrink-0 rounded-full object-cover"
 									/>
-									<div className="min-w-0">
-										<p className="text-sm font-medium text-foreground">{currentUser.name}</p>
-										<p className="text-xs text-muted-foreground">{currentUser.title}</p>
+									<div className="min-w-0 max-w-[20ch]">
+										<p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
+										<p className="truncate text-xs text-muted-foreground">{currentUser.title}</p>
 									</div>
 								</div>
 								<div className="flex flex-col p-1">
+									{!isGuest && onOpenInvitations && (
+										<button
+											type="button"
+											onClick={() => {
+												setMenuOpen(false);
+												onOpenInvitations();
+											}}
+											className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+										>
+											<Mail width={16} height={16} aria-hidden />
+											My invitations
+											{invitationCount > 0 && (
+												<span className="ml-auto border border-primary px-1.5 text-[10px] font-semibold text-primary">
+													{invitationCount}
+												</span>
+											)}
+										</button>
+									)}
 									{!isGuest && onEditProfile && (
 										<button
 											type="button"

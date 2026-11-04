@@ -200,6 +200,86 @@ export const listWorkspaceInvites = query({
 	},
 });
 
+export const listMyInvites = query({
+	args: {},
+	handler: async (ctx) => {
+		const user = await authComponent.safeGetAuthUser(ctx);
+		if (!user) return [];
+		const isAnonymous = "isAnonymous" in user && user.isAnonymous === true;
+		if (isAnonymous) return [];
+
+		const email = normalizeEmail(user.email ?? "");
+		if (!email) return [];
+
+		const invites = await ctx.db
+			.query("workspaceInvites")
+			.withIndex("email", (q) => q.eq("email", email))
+			.collect();
+		const now = Date.now();
+
+		const rows = await Promise.all(
+			invites
+				.filter((invite) => invite.kind === "email" && invite.usedAt === undefined)
+				.map(async (invite) => {
+					const workspace = await ctx.db.get(invite.workspaceId);
+					if (!workspace) return null;
+
+					const inviter = await ctx.runQuery(
+						components.betterAuth.adapter.findOne,
+						{
+							model: "user",
+							where: [
+								{ field: "_id", operator: "eq", value: invite.createdBy },
+							],
+							select: ["name", "username"],
+						},
+					);
+					const inviterDoc = inviter as UserDoc | null;
+
+					return {
+						_id: invite._id,
+						token: invite.token,
+						workspaceId: invite.workspaceId,
+						workspaceName: workspace.name,
+						role: invite.role,
+						inviterName:
+							inviterDoc?.name?.trim() ||
+							inviterDoc?.username ||
+							"A teammate",
+						createdAt: invite.createdAt,
+						expiresAt: invite.expiresAt,
+						status:
+							invite.expiresAt <= now
+								? ("expired" as const)
+								: ("active" as const),
+					};
+				}),
+		);
+
+		return rows
+			.filter((row): row is NonNullable<typeof row> => row !== null)
+			.sort((a, b) => b.createdAt - a.createdAt);
+	},
+});
+
+export const declineInvite = mutation({
+	args: { inviteId: v.id("workspaceInvites") },
+	handler: async (ctx, { inviteId }): Promise<{ ok: true }> => {
+		const user = await requireFullAccount(ctx);
+		const email = normalizeEmail(user.email ?? "");
+		const invite = await ctx.db.get(inviteId);
+		if (!invite || invite.kind !== "email" || !email || invite.email !== email) {
+			throw new Error("Invite not found");
+		}
+		if (invite.usedAt !== undefined) {
+			throw new Error("This invite has already been used");
+		}
+
+		await ctx.db.delete(inviteId);
+		return { ok: true };
+	},
+});
+
 export const revokeInvite = mutation({
 	args: {
 		workspaceId: v.id("workspaces"),
@@ -241,13 +321,15 @@ export const inviteByEmail = action({
 			select: ["id", "name", "email"],
 		});
 		const targetId = docId(target);
-		if (targetId) {
-			const membership = await ctx.runQuery(
-				internal.access.getMembershipInternal,
-				{ workspaceId, userId: targetId },
-			);
-			if (membership) return { status: "already_member" };
+		if (!targetId) {
+			throw new Error("No OpenChats user has that email address");
 		}
+
+		const membership = await ctx.runQuery(
+			internal.access.getMembershipInternal,
+			{ workspaceId, userId: targetId },
+		);
+		if (membership) return { status: "already_member" };
 
 		const workspace = await ctx.runQuery(
 			internal.access.getWorkspaceInternal,

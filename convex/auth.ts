@@ -6,7 +6,7 @@ import { DataModel } from "./_generated/dataModel";
 import { APIError } from "better-auth/api";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import { anonymous } from "better-auth/plugins/anonymous";
-import authConfig from "./config/auth.config";
+import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
 import { sendPasswordResetEmail, toSiteUrl } from "./email";
 

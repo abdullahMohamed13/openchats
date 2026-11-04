@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { WorkspaceRole } from "@/types/chat";
 import { WorkspaceDangerZone } from "./settings/WorkspaceDangerZone";
 import { WorkspaceIdentitySection } from "./settings/WorkspaceIdentitySection";
+import { WorkspaceJoinRequestsSection } from "./settings/WorkspaceJoinRequestsSection";
 import { WorkspaceMembersSection } from "./settings/WorkspaceMembersSection";
 
 interface WorkspaceSettingsDialogProps {
@@ -87,12 +88,20 @@ export function WorkspaceSettingsDialog({
 
 				<div className="flex-1 overflow-y-auto p-5">
 					{canManage && (
-						<WorkspaceIdentitySection
-							workspaceId={workspaceId}
-							workspaceName={workspaceName}
-							workspaceImageUrl={workspaceImageUrl}
-							onBusyChange={handleBusyChange}
-						/>
+						<>
+							<WorkspaceIdentitySection
+								workspaceId={workspaceId}
+								workspaceName={workspaceName}
+								workspaceImageUrl={workspaceImageUrl}
+								onBusyChange={handleBusyChange}
+							/>
+							<div className="mt-6">
+								<WorkspaceJoinRequestsSection
+									workspaceId={workspaceId}
+									onBusyChange={handleBusyChange}
+								/>
+							</div>
+						</>
 					)}
 
 					<div className={cn(canManage && "mt-6")}>

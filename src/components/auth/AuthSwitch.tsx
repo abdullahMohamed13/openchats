@@ -159,10 +159,12 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
           <Home width={16} height={16} aria-hidden />
           Home
         </Link>
-        <Link href="/chat" className="auth-home-link">
-          <Grid2x22 width={16} height={16} aria-hidden />
-          Back to chat
-        </Link>
+        {isGuest && (
+          <Link href="/chat" className="auth-home-link">
+            <Grid2x22 width={16} height={16} aria-hidden />
+            Back to chat
+          </Link>
+        )}
       </div>
       <div className={`container ${isSignUp ? "sign-up-mode" : ""}`}>
         <div className="forms-container">
@@ -234,21 +236,13 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               {!isGuest && (
                 <button
                   type="button"
-                  className="guest-btn"
+                  className="guest-btn -mt-0.5!"
                   disabled={busy}
                   onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
                 >
                   {guestLoading ? "Starting…" : "Enter as a guest"}
                 </button>
               )}
-              <p className="social-text">Or sign in with social platforms</p>
-              <div className="social-media">
-                <SocialIcons
-                  disabled={busy}
-                  pendingProvider={socialProvider}
-                  onSelect={startSocialLogin}
-                />
-              </div>
             </form>
 
             <form className="sign-up-form" onSubmit={handleSubmit} noValidate>
@@ -310,21 +304,13 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               {!isGuest && (
                 <button
                   type="button"
-                  className="guest-btn"
+                  className="guest-btn -mt-0.5!"
                   disabled={busy}
                   onClick={() => void handleGuestSignIn({ setLoading: setGuestLoading })}
                 >
                   {guestLoading ? "Starting…" : "Enter as a guest"}
                 </button>
               )}
-              <p className="social-text">Or sign up with social platforms</p>
-              <div className="social-media">
-                <SocialIcons
-                  disabled={busy}
-                  pendingProvider={socialProvider}
-                  onSelect={startSocialLogin}
-                />
-              </div>
             </form>
           </div>
         </div>
@@ -336,6 +322,14 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
               <button className="btn btn-outline" onClick={() => router.push("/signup")}>
                 Create account
               </button>
+              <p className="text[#fff]">Or join with social platforms</p>
+              <div className="social-media">
+                <SocialIcons
+                  disabled={busy}
+                  pendingProvider={socialProvider}
+                  onSelect={startSocialLogin}
+                />
+              </div>
             </div>
           </div>
 
@@ -346,6 +340,14 @@ export default function AuthSwitch({ initialMode = "sign-in", callbackURL }: Aut
                 <button className="btn btn-outline" onClick={() => router.push("/signin")}>
                 	Sign in
                 </button>
+                <p className="social-text">Or join with social platforms</p>
+                <div className="social-media">
+                  <SocialIcons
+                    disabled={busy}
+                    pendingProvider={socialProvider}
+                    onSelect={startSocialLogin}
+                  />
+                </div>
               </div>
             </div>
           )}
