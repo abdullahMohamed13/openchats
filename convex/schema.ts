@@ -48,6 +48,22 @@ export default defineSchema({
 		.index("token", ["token"])
 		.index("workspaceId", ["workspaceId"])
 		.index("email", ["email"]),
+	workspaceJoinRequests: defineTable({
+		workspaceId: v.id("workspaces"),
+		userId: v.string(),
+		status: v.union(
+			v.literal("pending"),
+			v.literal("accepted"),
+			v.literal("declined"),
+		),
+		createdAt: v.number(),
+		resolvedAt: v.optional(v.number()),
+		resolvedBy: v.optional(v.string()),
+	})
+		.index("workspaceId", ["workspaceId"])
+		.index("userId", ["userId"])
+		.index("workspaceId_userId", ["workspaceId", "userId"])
+		.index("workspaceId_status", ["workspaceId", "status"]),
 	channels: defineTable({
 		workspaceId: v.id("workspaces"),
 		streamId: v.string(),

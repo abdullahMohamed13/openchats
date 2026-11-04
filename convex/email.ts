@@ -81,14 +81,14 @@ export async function sendWorkspaceInviteEmail({
 					<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#ffffff;border:2px solid #1b1b1b;">
 						<tr>
 							<td style="padding:32px;">
-								<p style="margin:0 0 16px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6b6b6b;">OpenChats</p>
+								<p style="margin:0 0 16px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#12623A;">OpenChats</p>
 								<h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;color:#1b1b1b;">Join ${safeWorkspace}</h1>
 								<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3d3d3d;">
 									${safeInviter} invited you to chat in the <strong>${safeWorkspace}</strong> workspace.
 								</p>
 								<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
 									<tr>
-										<td style="background:#1b1b1b;">
+										<td style="background:#12623A;">
 											<a href="${safeUrl}" style="display:inline-block;padding:14px 24px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">Accept invite</a>
 										</td>
 									</tr>
