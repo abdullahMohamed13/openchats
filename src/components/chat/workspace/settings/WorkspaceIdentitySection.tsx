@@ -130,9 +130,6 @@ export function WorkspaceIdentitySection({
 	return (
 		<>
 			<section>
-				<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-					Image
-				</h3>
 				<div className="mt-2 flex flex-wrap items-center gap-4">
 					<WorkspaceAvatar
 						name={workspaceName}
