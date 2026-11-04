@@ -40,8 +40,13 @@ const MAX_WORKSPACE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export const listMyWorkspaces = query({
 	args: {},
-	handler: async (ctx): Promise<WorkspaceSummary[]> => {
-		const user = await authComponent.getAuthUser(ctx);
+	handler: async (ctx): Promise<WorkspaceSummary[] | null> => {
+		// Signing out revokes the session while this query is still subscribed;
+		// return null instead of throwing (and instead of pretending the user has
+		// no workspaces) during that transition.
+		const user = await authComponent.safeGetAuthUser(ctx);
+		if (!user) return null;
+
 		const userId = String(user._id);
 
 		const memberships = await ctx.db
@@ -150,7 +155,14 @@ export const deleteWorkspaceData = internalMutation({
 			.query("workspaceMembers")
 			.withIndex("workspaceId", (q) => q.eq("workspaceId", workspaceId))
 			.collect();
+		const joinRequests = await ctx.db
+			.query("workspaceJoinRequests")
+			.withIndex("workspaceId", (q) => q.eq("workspaceId", workspaceId))
+			.collect();
 
+		for (const joinRequest of joinRequests) {
+			await ctx.db.delete(joinRequest._id);
+		}
 		for (const invite of invites) {
 			await ctx.db.delete(invite._id);
 		}

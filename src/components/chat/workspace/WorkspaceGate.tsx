@@ -2,29 +2,47 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/8bit/button";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
+import { JoinWorkspaceDialog } from "./JoinWorkspaceDialog";
+import { InvitationsDialog } from "../invite/InvitationsDialog";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { Spinner } from "@/components/ui/8bit/spinner";
 
 export function WorkspaceGate() {
 	const router = useRouter();
-	const workspaces = useQuery(api.workspaces.listMyWorkspaces);
 	const { data: session } = authClient.useSession();
-	const [createOpen, setCreateOpen] = useState(false);
-
+	const { isAuthenticated } = useConvexAuth();
 	const isGuest = session?.user?.isAnonymous;
+	const workspaces = useQuery(
+		api.workspaces.listMyWorkspaces,
+		isAuthenticated ? undefined : "skip",
+	);
+	const myInvites = useQuery(
+		api.invites.listMyInvites,
+		isAuthenticated && !isGuest ? undefined : "skip",
+	);
+	const [createOpen, setCreateOpen] = useState(false);
+	const [joinOpen, setJoinOpen] = useState(false);
+	const [invitationsOpen, setInvitationsOpen] = useState(false);
+
 	const firstWorkspace = workspaces?.[0];
+	const activeInviteCount =
+		myInvites?.filter((invite) => invite.status === "active").length ?? 0;
 
 	useEffect(() => {
 		if (firstWorkspace) {
 			router.replace(`/chat/w/${firstWorkspace._id}`);
 		}
 	}, [firstWorkspace, router]);
+
+	// While signing out, the protected layout is about to unmount this page.
+	// Don't briefly render the first-workspace/"create workspace" screen.
+	if (!session || !isAuthenticated || workspaces === null) return null;
 
 	if (workspaces === undefined) {
 		return (
@@ -87,12 +105,29 @@ export function WorkspaceGate() {
 					</p>
 				</div>
 				<h1 className="mt-4 font-press-start text-xl uppercase leading-relaxed">
-					Build your first workspace
+					Create or join a workspace
 				</h1>
 				<p className="mt-4 text-sm leading-relaxed text-muted-foreground">
 					Workspaces keep channels, conversations, and people together. Create
-					one to start chatting.
+					your own or join a team that already has one.
 				</p>
+
+				{activeInviteCount > 0 && (
+					<div className="mt-6 border border-primary/60 bg-primary/10 p-4">
+						<p className="text-xs uppercase tracking-wide text-primary">
+							{activeInviteCount} invitation
+							{activeInviteCount === 1 ? "" : "s"} waiting
+						</p>
+						<Button
+							type="button"
+							onClick={() => setInvitationsOpen(true)}
+							variant="outline"
+							className="mt-3 h-10 w-full text-xs uppercase"
+						>
+							View invitations
+						</Button>
+					</div>
+				)}
 
 				<Button
 					type="button"
@@ -101,10 +136,24 @@ export function WorkspaceGate() {
 				>
 					Create workspace
 				</Button>
+				<Button
+					type="button"
+					onClick={() => setJoinOpen(true)}
+					variant="outline"
+					className="mt-3 h-11 w-full text-sm uppercase"
+				>
+					Join with workspace ID
+				</Button>
 			</motion.div>
 
 			{createOpen && (
 				<CreateWorkspaceDialog onClose={() => setCreateOpen(false)} />
+			)}
+			{joinOpen && (
+				<JoinWorkspaceDialog onClose={() => setJoinOpen(false)} />
+			)}
+			{invitationsOpen && (
+				<InvitationsDialog onClose={() => setInvitationsOpen(false)} />
 			)}
 		</main>
 	);

@@ -16,6 +16,7 @@ import type * as email from "../email.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as invites from "../invites.js";
+import type * as joinRequests from "../joinRequests.js";
 import type * as profile from "../profile.js";
 import type * as stream from "../stream.js";
 import type * as username from "../username.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   guest: typeof guest;
   http: typeof http;
   invites: typeof invites;
+  joinRequests: typeof joinRequests;
   profile: typeof profile;
   stream: typeof stream;
   username: typeof username;

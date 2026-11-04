@@ -3,15 +3,27 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAction, useQuery } from "convex/react";
-import { Crown, UserMinus } from "pixelarticons/react";
+import { Crown, MoreVertical, UserMinus } from "pixelarticons/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/8bit/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/8bit/dropdown-menu";
 import { Skeleton } from "@/components/ui/8bit/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error-message";
 import { roleLabel } from "@/lib/workspace-role";
 import { DEFAULT_AVATAR, type WorkspaceMember, type WorkspaceRole } from "@/types/chat";
+import { TransferOwnershipDialog } from "./TransferOwnershipDialog";
+
+const ROLE_ORDER: Record<WorkspaceRole, number> = {
+	owner: 0,
+	admin: 1,
+	member: 2,
+};
 
 interface WorkspaceMembersSectionProps {
 	workspaceId: Id<"workspaces">;
@@ -34,7 +46,7 @@ export function WorkspaceMembersSection({
 	const [removingId, setRemovingId] = useState<string | null>(null);
 	const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
 	const [transferringId, setTransferringId] = useState<string | null>(null);
-	const [confirmTransferId, setConfirmTransferId] = useState<string | null>(null);
+	const [transferTarget, setTransferTarget] = useState<WorkspaceMember | null>(null);
 	const [transferNotice, setTransferNotice] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -66,27 +78,30 @@ export function WorkspaceMembersSection({
 		}
 	};
 
-	const handleTransfer = async (member: WorkspaceMember) => {
-		if (confirmTransferId !== member.userId) {
-			setConfirmTransferId(member.userId);
-			setTransferNotice(null);
-			setError(null);
-			return;
-		}
+	const handleTransfer = (member: WorkspaceMember) => {
+		setTransferTarget(member);
+		setTransferNotice(null);
+		setError(null);
+	};
 
-		setTransferringId(member.userId);
+	const handleConfirmTransfer = async () => {
+		if (!transferTarget) return;
+
+		setTransferringId(transferTarget.userId);
 		setError(null);
 		try {
-			await transferOwnership({ workspaceId, userId: member.userId });
-			setConfirmTransferId(null);
+			await transferOwnership({
+				workspaceId,
+				userId: transferTarget.userId,
+			});
 			setTransferNotice(
-				`Ownership transferred to ${member.name}. You are now an admin.`,
+				`Ownership transferred to ${transferTarget.name}. You are now an admin.`,
 			);
 		} catch (cause) {
 			setError(getErrorMessage(cause, "Could not transfer ownership."));
-			setConfirmTransferId(null);
 		} finally {
 			setTransferringId(null);
+			setTransferTarget(null);
 		}
 	};
 
@@ -127,12 +142,20 @@ export function WorkspaceMembersSection({
 		return true;
 	};
 
+	const sortedMembers = members
+		? [...members].sort(
+				(a, b) =>
+					ROLE_ORDER[a.role] - ROLE_ORDER[b.role] ||
+					a.joinedAt - b.joinedAt,
+			)
+		: undefined;
+
 	return (
 		<section>
 			<h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 				Members
 			</h3>
-			{members === undefined ? (
+			{sortedMembers === undefined ? (
 				<div className="mt-3 flex flex-col gap-2">
 					{Array.from({ length: 3 }).map((_, index) => (
 						<Skeleton key={index} className="h-12 w-full" />
@@ -140,7 +163,7 @@ export function WorkspaceMembersSection({
 				</div>
 			) : (
 				<ul className="mt-3 flex flex-col divide-y divide-border border-y border-border">
-					{members.map((member) => (
+					{sortedMembers.map((member) => (
 						<li
 							key={member.userId}
 							className="flex flex-wrap items-center gap-3 py-2.5"
@@ -175,76 +198,49 @@ export function WorkspaceMembersSection({
 							>
 								{roleLabel(member.role)}
 							</span>
-							{canTransferOwnership(member) && (
-								<Button
-									type="button"
-									onClick={() => void handleTransfer(member)}
-									disabled={transferringId !== null}
-									aria-label={`Make ${member.name} the workspace owner`}
-									title={`Make ${member.name} the workspace owner`}
-									variant={
-										confirmTransferId === member.userId
-											? "destructive"
-											: "outline"
-									}
-									size="sm"
-									className="h-auto shrink-0 gap-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide"
-								>
-									{transferringId === member.userId ? (
-										"…"
-									) : confirmTransferId === member.userId ? (
-										"Confirm?"
-									) : (
-										<>
-											<Crown width={12} height={12} aria-hidden />
-											Make owner
-										</>
-									)}
-								</Button>
-							)}
-							{canChangeRole(member) && (
-								<Button
-									type="button"
-									onClick={() => void handleRoleChange(member)}
-									disabled={changingRoleId !== null}
-									aria-label={
-										member.role === "member"
-											? `Promote ${member.name} to admin`
-											: `Demote ${member.name} to member`
-									}
-									title={
-										member.role === "member"
-											? `Promote ${member.name} to admin`
-											: `Demote ${member.name} to member`
-									}
-									variant="outline"
-									size="sm"
-									className="h-auto shrink-0 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide"
-								>
-									{changingRoleId === member.userId
-										? "…"
-										: member.role === "member"
-											? "Promote"
-											: "Demote"}
-								</Button>
-							)}
-							{canRemove(member) && (
-								<Button
-									type="button"
-									onClick={() => void handleRemove(member)}
-									disabled={removingId !== null}
-									aria-label={`Remove ${member.name}`}
-									title={`Remove ${member.name}`}
-									variant="ghost"
-									size="sm"
-									className="size-8 shrink-0 p-0 text-danger hover:text-danger/60"
-								>
-									{removingId === member.userId ? (
-										<span className="text-[10px]">…</span>
-									) : (
-										<UserMinus width={16} height={16} />
-									)}
-								</Button>
+							{(canChangeRole(member) ||
+								canTransferOwnership(member) ||
+								canRemove(member)) && (
+								<DropdownMenu>
+									<DropdownMenuTrigger
+										aria-label={`Actions for ${member.name}`}
+										title={`Actions for ${member.name}`}
+										className="inline-flex size-8 shrink-0 items-center justify-center border-none bg-transparent text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground"
+									>
+										<MoreVertical width={16} height={16} />
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end" className="w-48">
+										{canChangeRole(member) && (
+											<DropdownMenuItem
+												className="cursor-pointer px-3 py-2 text-xs"
+												onClick={() => void handleRoleChange(member)}
+											>
+												{member.role === "member"
+													? "Promote to admin"
+													: "Demote to member"}
+											</DropdownMenuItem>
+										)}
+										{canTransferOwnership(member) && (
+											<DropdownMenuItem
+												className="cursor-pointer px-3 py-2 text-xs"
+												onClick={() => handleTransfer(member)}
+											>
+												<Crown width={14} height={14} aria-hidden />
+												Make owner
+											</DropdownMenuItem>
+										)}
+										{canRemove(member) && (
+											<DropdownMenuItem
+												variant="destructive"
+												className="cursor-pointer px-3 py-2 text-xs"
+												onClick={() => void handleRemove(member)}
+											>
+												<UserMinus width={14} height={14} aria-hidden />
+												Remove from workspace
+											</DropdownMenuItem>
+										)}
+									</DropdownMenuContent>
+								</DropdownMenu>
 							)}
 						</li>
 					))}
@@ -259,6 +255,14 @@ export function WorkspaceMembersSection({
 				<p role="alert" className="mt-3 text-xs text-danger">
 					{error}
 				</p>
+			)}
+			{transferTarget && (
+				<TransferOwnershipDialog
+					member={transferTarget}
+					transferring={transferringId !== null}
+					onCancel={() => setTransferTarget(null)}
+					onConfirm={() => void handleConfirmTransfer()}
+				/>
 			)}
 		</section>
 	);

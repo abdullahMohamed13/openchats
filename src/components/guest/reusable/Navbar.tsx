@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { User, Logout, Grid2x22, Flag, Close, Menu, UserPlus } from "pixelarticons/react";
+import { User, Logout, Grid2x22, Flag, Close, Menu, UserPlus, MoreVertical } from "pixelarticons/react";
 import { authClient } from "@/lib/auth-client";
 import { handleSignOut } from "@/lib/sign-out";
 import { BrutalButton } from "@/components/ui/brutal-button";
+import { EditProfileDialog } from "@/components/chat/profile/EditProfileDialog";
 import { useSmoothScroll } from "@/providers/SmoothScrollProvider";
 import "@/styles/retro.css";
 
@@ -20,9 +20,9 @@ const LINKS = [
 
 export default function Navbar() {
 	const { data: session, isPending } = authClient.useSession();
-	const router = useRouter();
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [userOpen, setUserOpen] = useState(false);
+	const [profileOpen, setProfileOpen] = useState(false);
 	const [avatarBroken, setAvatarBroken] = useState(false);
 	const userMenuRef = useRef<HTMLDivElement>(null);
 	const { scrollTo } = useSmoothScroll();
@@ -57,11 +57,12 @@ export default function Navbar() {
 
 	const onSignOut = async () => {
 		setUserOpen(false);
-		await handleSignOut(router);
+		await handleSignOut();
 	};
 
 	return (
-		<header className="sticky top-0 z-50 border-b-2 border-foreground/10 bg-background/90 backdrop-blur-sm">
+		<>
+			<header className="sticky top-0 z-50 border-b-2 border-foreground/10 bg-background/90 backdrop-blur-sm">
 			<div className="mx-auto flex h-[var(--nav-height)] max-w-6xl items-center gap-3 px-4 md:px-8">
 				<Link href="/" className="flex shrink-0 items-center gap-2" aria-label="OpenChats home">
 					<Image src="/logo.webp" alt="OpenChats" width={28} height={28} className="size-7 object-contain" />
@@ -112,14 +113,17 @@ export default function Navbar() {
 							{userOpen && (
 								<div
 									role="menu"
-									className="absolute right-0 top-full z-50 mt-2 w-52 border-2 border-foreground bg-background p-1 shadow-[3px_3px_0px_var(--accent)]"
+									className="absolute right-0 top-full z-50 mt-2 w-max max-w-[calc(100vw-2rem)] border-2 border-foreground bg-background p-1 shadow-[3px_3px_0px_var(--accent)]"
 								>
 									<div className="border-b border-foreground/10 px-3 py-2">
-										<p className="retro text-xs font-medium">{user.name}</p>
-										{user.username && (
-											<p className="retro truncate text-[10px] text-muted-foreground">@{user.username}</p>
-										)}
+										<div className="min-w-0 max-w-[20ch]">
+											<p className="retro truncate text-xs font-medium">{user.name}</p>
+											{user.username && (
+												<p className="retro truncate text-[10px] text-muted-foreground">@{user.username}</p>
+											)}
+										</div>
 									</div>
+
 
 									<Link
 										href="/chat"
@@ -130,6 +134,21 @@ export default function Navbar() {
 										<Grid2x22 width={16} height={16} aria-hidden />
 										Chat
 									</Link>
+									
+									{!isGuest && (
+										<button
+											type="button"
+											role="menuitem"
+											onClick={() => {
+												setUserOpen(false);
+												setProfileOpen(true);
+											}}
+											className="retro flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
+										>
+											<MoreVertical width={16} height={16} aria-hidden />
+											Edit profile
+										</button>
+									)}
 
 									{needsOnboarding && (
 										<Link
@@ -230,5 +249,7 @@ export default function Navbar() {
 				</div>
 			)}
 		</header>
+		{profileOpen && <EditProfileDialog onClose={() => setProfileOpen(false)} />}
+		</>
 	);
 }

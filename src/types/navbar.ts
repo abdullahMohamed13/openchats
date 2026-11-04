@@ -9,6 +9,7 @@ export interface NavSidebarProps {
 	currentUserBadge?: string;
 	channels: ChannelSummary[];
 	dms: DirectMessageSummary[];
+	loading?: boolean;
 	activeConversationId: string;
 	onSelectConversation: (id: string) => void;
 	onSelectWorkspace: (id: string) => void;
@@ -16,6 +17,10 @@ export interface NavSidebarProps {
 	onCreateChannel?: () => void;
 	onStartDirectMessage?: () => void;
 	onOpenInvite?: () => void;
+	onOpenInvitations?: () => void;
+	invitationCount?: number;
+	onOpenJoinRequests?: () => void;
+	joinRequestCount?: number;
 	onOpenSettings?: () => void;
 	open?: boolean;
 	collapsed?: boolean;

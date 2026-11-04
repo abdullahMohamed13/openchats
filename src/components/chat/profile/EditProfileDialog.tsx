@@ -155,7 +155,7 @@ export function EditProfileDialog({ onClose }: EditProfileDialogProps) {
 					onSubmit={handleSave}
 					className="flex min-h-0 flex-1 flex-col"
 				>
-					<div className="flex-1 overflow-y-auto p-5">
+					<div className="flex-1 overflow-y-auto overscroll-contain p-5" data-lenis-prevent>
 						<section className="flex items-center gap-4 border-b border-border pb-5">
 							<Image
 								src={selectedAvatar}

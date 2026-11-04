@@ -1,23 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
 	Check,
 	ChevronDown,
 	Close,
+	Home,
+	Inbox,
 	Plus,
 	Search,
 	Settings2,
 	UserPlus,
 } from "pixelarticons/react";
 import { Button } from "@/components/ui/8bit/button";
-import { Input } from "@/components/ui/8bit/input";
 import { cn } from "@/lib/utils";
 import "@/styles/retro.css";
 import { ChannelItem } from "./channel/ChannelItem";
 import { DMItem } from "./dm/DMItem";
 import { WorkspaceAvatar } from "./workspace/WorkspaceAvatar";
 import { NavSidebarProps } from "@/types/navbar";
+
+const MAX_VISIBLE_WORKSPACES = 6;
 
 export function NavSidebar({
 	workspaceName,
@@ -27,6 +31,7 @@ export function NavSidebar({
 	canManageWorkspace,
 	channels,
 	dms,
+	loading = false,
 	activeConversationId,
 	onSelectConversation,
 	onSelectWorkspace,
@@ -34,6 +39,8 @@ export function NavSidebar({
 	onCreateChannel,
 	onStartDirectMessage,
 	onOpenInvite,
+	onOpenJoinRequests,
+	joinRequestCount = 0,
 	onOpenSettings,
 	open,
 	collapsed,
@@ -44,6 +51,12 @@ export function NavSidebar({
 	const [dmsOpen, setDmsOpen] = useState(true);
 	const [query, setQuery] = useState("");
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [showAllWorkspaces, setShowAllWorkspaces] = useState(false);
+
+	const visibleWorkspaces = showAllWorkspaces
+		? workspaces
+		: workspaces.slice(0, MAX_VISIBLE_WORKSPACES);
+	const hasMoreWorkspaces = workspaces.length > MAX_VISIBLE_WORKSPACES;
 
 	const normalized = query.trim().toLowerCase();
 	const filteredChannels = normalized
@@ -68,7 +81,10 @@ export function NavSidebar({
 					<div className="relative min-w-0 flex-1">
 						<button
 							type="button"
-							onClick={() => setMenuOpen((value) => !value)}
+							onClick={() => {
+								setMenuOpen((value) => !value);
+								setShowAllWorkspaces(false);
+							}}
 							aria-expanded={menuOpen}
 							aria-haspopup="menu"
 							className="flex w-full min-w-0 items-center gap-1.5 text-foreground"
@@ -98,8 +114,13 @@ export function NavSidebar({
 									<p className="border-b border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
 										Workspaces
 									</p>
-									<div className="max-h-48 overflow-y-auto p-1">
-										{workspaces.map((workspace) => (
+									<div
+										className={cn(
+											"overflow-y-auto p-1",
+											showAllWorkspaces ? "max-h-80" : "max-h-48",
+										)}
+									>
+										{visibleWorkspaces.map((workspace) => (
 											<button
 												key={workspace._id}
 												type="button"
@@ -123,7 +144,28 @@ export function NavSidebar({
 											</button>
 										))}
 									</div>
+									{hasMoreWorkspaces && (
+										<button
+											type="button"
+											role="menuitem"
+											onClick={() => setShowAllWorkspaces((value) => !value)}
+											aria-expanded={showAllWorkspaces}
+											className="border-t border-border px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-primary transition-colors hover:bg-muted"
+										>
+											{showAllWorkspaces ? "Show less" : "Show more"}
+										</button>
+									)}
 									<div className={`${!isGuest && "border-t border-border p-1"}`}>
+										{canManageWorkspace && onOpenJoinRequests && (
+											<MenuAction
+												icon={<Inbox width={14} height={14} />}
+												label={`Join requests${joinRequestCount > 0 ? ` (${joinRequestCount})` : ""}`}
+												onClick={() => {
+													setMenuOpen(false);
+													onOpenJoinRequests();
+												}}
+											/>
+										)}
 										{canManageWorkspace && !isGuest && onOpenInvite && (
 											<MenuAction
 												icon={<UserPlus width={14} height={14} />}
@@ -159,16 +201,23 @@ export function NavSidebar({
 							</>
 						)}
 					</div>
-					<Button
+					<Link
+						href="/"
+						aria-label="Go home"
+						title="Go home"
+						className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+					>
+						<Home width={16} height={16} aria-hidden />
+					</Link>
+					<button
 						type="button"
 						aria-label="Close navigation"
+						title="Close navigation"
 						onClick={onClose}
-						variant="ghost"
-						size="icon"
-						className="mx-0 size-7 text-muted-foreground lg:hidden"
+						className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground lg:hidden"
 					>
-						<Close width={16} height={16} />
-					</Button>
+						<Close width={16} height={16} aria-hidden />
+					</button>
 				</div>
 
 				<div className="relative px-3 py-2">
@@ -178,13 +227,13 @@ export function NavSidebar({
 						className="pointer-events-none absolute left-5 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
 						aria-hidden
 					/>
-					<Input
+					<input
 						type="search"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="Search"
 						aria-label="Search"
-						style={{ paddingLeft: "2rem" }}
+						className="h-10 w-full border-2 border-foreground bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-primary/85 focus:shadow-[3px_3px_0px_var(--primary)]"
 					/>
 				</div>
 
@@ -209,7 +258,9 @@ export function NavSidebar({
 						}
 					/>
 					{channelsOpen &&
-						(filteredChannels.length > 0 ? (
+						(loading ? (
+							<p className="px-2 pb-3 text-xs text-muted-foreground">Loading…</p>
+						) : filteredChannels.length > 0 ? (
 							<div className="flex flex-col gap-0.5 px-1 pb-3">
 								{filteredChannels.map((channel) => (
 									<ChannelItem
@@ -250,7 +301,9 @@ export function NavSidebar({
 						/>
 					)}
 					{!isGuest && dmsOpen &&
-						(filteredDms.length > 0 ? (
+						(loading ? (
+							<p className="px-2 text-xs text-muted-foreground">Loading…</p>
+						) : filteredDms.length > 0 ? (
 							<div className="flex flex-col gap-0.5 px-1">
 								{filteredDms.map((dm) => (
 									<DMItem

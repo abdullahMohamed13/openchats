@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/8bit/button";
 import { getErrorMessage } from "@/lib/error-message";
@@ -12,6 +13,7 @@ interface NotificationsDialogProps {
 	onSelect: (id: string) => void;
 	onMarkAllRead: () => void | Promise<void>;
 	onClose: () => void;
+	isGuest?: boolean;
 }
 
 interface NotificationItem {
@@ -27,6 +29,7 @@ export function NotificationsDialog({
 	onSelect,
 	onMarkAllRead,
 	onClose,
+	isGuest = false,
 }: NotificationsDialogProps) {
 	const [marking, setMarking] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -109,7 +112,20 @@ export function NotificationsDialog({
 				</header>
 
 				<div className="flex-1 overflow-y-auto p-4">
-					{items.length === 0 ? (
+					{isGuest ? (
+						<div className="flex flex-col items-start gap-4">
+							<p className="text-sm text-muted-foreground">
+								Create an account to enable notifications.
+							</p>
+							<Link
+								href="/signup"
+								onClick={onClose}
+								className="border-2 border-foreground bg-primary px-3 py-2 font-press-start text-[10px] uppercase text-primary-foreground shadow-[3px_3px_0px_var(--foreground)] transition-transform hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_var(--foreground)]"
+							>
+								Create an account
+							</Link>
+						</div>
+					) : items.length === 0 ? (
 						<p className="text-sm text-muted-foreground">
 							No unread conversations right now.
 						</p>
@@ -156,22 +172,24 @@ export function NotificationsDialog({
 				</div>
 
 				<footer className="flex items-center justify-between gap-3 border-t border-border p-4">
-					<Button
-						type="button"
-						onClick={() => void handleMarkAllRead()}
-						disabled={marking || items.length === 0}
-						size="sm"
-						className="px-3 py-2 text-[10px] uppercase"
-					>
-						{marking ? "Marking…" : "Mark all read"}
-					</Button>
+					{!isGuest && (
+						<Button
+							type="button"
+							onClick={() => void handleMarkAllRead()}
+							disabled={marking || items.length === 0}
+							size="sm"
+							className="px-3 py-2 text-[10px] uppercase"
+						>
+							{marking ? "Marking…" : "Mark all read"}
+						</Button>
+					)}
 					<Button
 						type="button"
 						onClick={onClose}
 						disabled={marking}
 						variant="outline"
 						size="sm"
-						className="px-3 py-2 text-[10px] uppercase"
+						className="ml-auto px-3 py-2 text-[10px] uppercase"
 					>
 						Close
 					</Button>

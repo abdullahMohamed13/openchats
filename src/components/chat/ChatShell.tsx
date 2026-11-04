@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 // Types
 import type { Event } from "stream-chat";
 import { DEFAULT_AVATAR, type CurrentUser } from "@/types/chat";
@@ -21,7 +21,9 @@ import { ConversationArea } from "./conversation/ConversationArea";
 import { CreateWorkspaceDialog } from "./workspace/CreateWorkspaceDialog";
 import { CreateChannelDialog } from "./channel/CreateChannelDialog";
 import { InviteDialog } from "./invite/InviteDialog";
+import { InvitationsDialog } from "./invite/InvitationsDialog";
 import { WorkspaceSettingsDialog } from "./workspace/WorkspaceSettingsDialog";
+import { WorkspaceJoinRequestsDialog } from "./workspace/WorkspaceJoinRequestsDialog";
 import { EditProfileDialog } from "./profile/EditProfileDialog";
 import { ChannelSettingsDialog } from "./channel/ChannelSettingsDialog";
 import { NewDirectMessageDialog } from "./dm/NewDirectMessageDialog";
@@ -33,15 +35,20 @@ interface ChatShellProps {
 
 export function ChatShell({ workspaceId }: ChatShellProps) {
 	const router = useRouter();
-	const { data: session, isPending } = authClient.useSession();
+	const { data: session } = authClient.useSession();
 	const isGuest = !!session?.user?.isAnonymous;
+	const { isAuthenticated } = useConvexAuth();
 	const workspaces = useQuery(
 		api.workspaces.listMyWorkspaces,
-		session && !isPending ? undefined : "skip",
+		isAuthenticated ? undefined : "skip",
 	);
 	const dbChannels = useQuery(
 		api.channels.listWorkspaceChannels,
-		session && !isPending ? { workspaceId } : "skip",
+		isAuthenticated ? { workspaceId } : "skip",
+	);
+	const myInvites = useQuery(
+		api.invites.listMyInvites,
+		isAuthenticated && !isGuest ? undefined : "skip",
 	);
 	const { client } = useChatContext();
 	const { channels, dms, loading, refresh } = useConversations(
@@ -56,6 +63,8 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const [newDmOpen, setNewDmOpen] = useState(false);
 	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const [inviteOpen, setInviteOpen] = useState(false);
+	const [invitationsOpen, setInvitationsOpen] = useState(false);
+	const [joinRequestsOpen, setJoinRequestsOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [profileOpen, setProfileOpen] = useState(false);
 	const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
@@ -73,12 +82,20 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const activeWorkspace = workspaces?.find(
 		(workspace) => workspace._id === workspaceId,
 	);
+	const canManageWorkspace =
+		!isGuest &&
+		(activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin");
+	const workspaceJoinRequests = useQuery(
+		api.joinRequests.listWorkspaceJoinRequests,
+		canManageWorkspace ? { workspaceId } : "skip",
+	);
 
 	useEffect(() => {
-		if (workspaces !== undefined && !activeWorkspace) {
+		if (!isAuthenticated || !session) return;
+		if (workspaces && workspaces.length > 0 && !activeWorkspace) {
 			router.replace("/chat");
 		}
-	}, [workspaces, activeWorkspace, router]);
+	}, [isAuthenticated, session, workspaces, activeWorkspace, router]);
 
 	useEffect(() => {
 		const handleChannelRemoved = (event: Event) => {
@@ -105,9 +122,9 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 		);
 	}
 
-	if (!activeWorkspace) return null;
+	if (workspaces === null) return null;
 
-	const canManageWorkspace = activeWorkspace.role !== "member" && !isGuest;
+	if (!activeWorkspace) return null;
 
 	const activeId = selectedId || channels[0]?.id || dms[0]?.id || "";
 
@@ -120,6 +137,9 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 	const notificationCount =
 		channels.reduce((total, channel) => total + channel.unreadCount, 0) +
 		dms.reduce((total, dm) => total + dm.unreadCount, 0);
+	const invitationCount =
+		myInvites?.filter((invite) => invite.status === "active").length ?? 0;
+	const joinRequestCount = workspaceJoinRequests?.length ?? 0;
 
 	const resolved = activeChannel
 		? { title: `# ${activeChannel.name}`, subtitle: "Channel" }
@@ -191,6 +211,10 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				onCreateWorkspace={isGuest ? undefined : () => setCreateWorkspaceOpen(true)}
 				onOpenSettings={isGuest ? undefined : () => setSettingsOpen(true)}
 				onEditProfile={isGuest ? undefined : () => setProfileOpen(true)}
+				onOpenInvitations={
+					isGuest ? undefined : () => setInvitationsOpen(true)
+				}
+				invitationCount={invitationCount}
 				isGuest={isGuest}
 			/>
 
@@ -203,14 +227,25 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 				currentUserBadge={currentUser.badge}
 				channels={channels}
 				dms={dms}
+				loading={loading}
 				activeConversationId={activeId}
 				onSelectConversation={handleSelect}
 				onSelectWorkspace={handleSelectWorkspace}
 				onCreateWorkspace={isGuest ? undefined : () => setCreateWorkspaceOpen(true)}
-				onCreateChannel={isGuest ? undefined : () => setCreateChannelOpen(true)}
+				onCreateChannel={
+					canManageWorkspace ? () => setCreateChannelOpen(true) : undefined
+				}
 				onStartDirectMessage={isGuest ? undefined : () => setNewDmOpen(true)}
 				onOpenInvite={isGuest ? undefined : () => setInviteOpen(true)}
 				onOpenSettings={isGuest ? undefined : () => setSettingsOpen(true)}
+				onOpenInvitations={
+					isGuest ? undefined : () => setInvitationsOpen(true)
+				}
+				invitationCount={invitationCount}
+				onOpenJoinRequests={
+					canManageWorkspace ? () => setJoinRequestsOpen(true) : undefined
+				}
+				joinRequestCount={joinRequestCount}
 				open={navOpen}
 				collapsed={navCollapsed}
 				onClose={() => setNavOpen(false)}
@@ -244,7 +279,7 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					onClose={() => setCreateWorkspaceOpen(false)}
 				/>
 			)}
-			{!isGuest && createChannelOpen && (
+			{!isGuest && canManageWorkspace && createChannelOpen && (
 				<CreateChannelDialog
 					workspaceId={workspaceId}
 					onClose={() => setCreateChannelOpen(false)}
@@ -261,19 +296,29 @@ export function ChatShell({ workspaceId }: ChatShellProps) {
 					onCreated={handleDirectMessageCreated}
 				/>
 			)}
-			{!isGuest && notificationsOpen && (
+			{notificationsOpen && (
 				<NotificationsDialog
 					channels={channels}
 					dms={dms}
 					onSelect={handleSelect}
 					onMarkAllRead={handleMarkAllRead}
 					onClose={() => setNotificationsOpen(false)}
+					isGuest={isGuest}
 				/>
 			)}
 			{!isGuest && inviteOpen && (
 				<InviteDialog
 					workspaceId={workspaceId}
 					onClose={() => setInviteOpen(false)}
+				/>
+			)}
+			{!isGuest && invitationsOpen && (
+				<InvitationsDialog onClose={() => setInvitationsOpen(false)} />
+			)}
+			{!isGuest && joinRequestsOpen && (
+				<WorkspaceJoinRequestsDialog
+					workspaceId={workspaceId}
+					onClose={() => setJoinRequestsOpen(false)}
 				/>
 			)}
 			{!isGuest && settingsOpen && (
